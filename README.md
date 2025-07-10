@@ -95,8 +95,8 @@ ordering-microservices/
 │ └── workflows/
 │ └── test.yml # GitHub Actions CI workflow
 │
-├── README.md # You're here 🚀
-└── LICENSE # Open-source license (MIT, Apache 2.0, etc.)
+├── README.md # You're here
+└── LICENSE # Open-source license
 ```
 
 ---
