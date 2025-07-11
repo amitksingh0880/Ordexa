@@ -1,0 +1,23 @@
+{
+  "name": "backend",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+
+  "scripts": {
+    "dev": "bun src/index.ts"
+  },
+  
+  "devDependencies": {
+    "@types/bun": "latest",
+    "bun-types": "^1.2.18"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.11.1",
+    "express": "^5.1.0",
+    "prisma": "^6.11.1"
+  }
+}
