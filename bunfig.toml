@@ -1,0 +1,3 @@
+# bunfig.toml
+[workspace]
+projects = ["apps/*"]
