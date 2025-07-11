@@ -1,0 +1,26 @@
+name: Publish Docs
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  deploy-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+
+      - name: Install deps
+        run: bun install
+
+      - name: Generate docs
+        run: bun run docs
+
+      - name: Deploy to GitHub Pages
+        run: bunx gh-pages -d docs/backend

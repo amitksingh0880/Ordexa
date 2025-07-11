@@ -1,0 +1,42 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🛠 Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: 📦 Install dependencies
+        run: bun install
+
+      - name: 🔍 Biome check + Redocly lint
+        run: bun run check
+
+      - name: 🧪 TypeScript build check (optional)
+        run: bun tsc --noEmit || true
+
+      - name: 🎭 Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: 🚀 Start Frontend (Vite)
+        run: bun run dev &
+        working-directory: apps/frontend
+
+      - name: ⏳ Wait for frontend to be ready
+        run: npx wait-on http://localhost:5173
+
+      - name: ✅ Run E2E Tests
+        run: bun run e2e
