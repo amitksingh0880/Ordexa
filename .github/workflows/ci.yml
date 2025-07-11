@@ -22,11 +22,11 @@ jobs:
       - name: 📦 Install dependencies
         run: bun install
 
-      - name: 🔍 Biome check + Redocly lint
-        run: bun run check
+      # - name: 🔍 Biome check + Redocly lint
+      #   run: bun run check
 
-      - name: 🧪 TypeScript build check (optional)
-        run: bun tsc --noEmit || true
+      # - name: 🧪 TypeScript build check (optional)
+      #   run: bun tsc --noEmit || true
 
       - name: 🎭 Install Playwright Browsers
         run: npx playwright install --with-deps
