@@ -37,6 +37,6 @@
     "typescript": "^5"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": "bunx biome check --apply"
+    "*.{ts,tsx,js,jsx}": "bunx biome check --apply --noEmit"
   }
 }

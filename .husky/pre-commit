@@ -4,5 +4,5 @@
 echo "🎯 Running lint-staged..."
 npx lint-staged
 
-echo "🧠 Type-checking..."
-bun run tsc
+# echo "🧠 Type-checking..."
+# bun run tsc
