@@ -1,0 +1,9 @@
+{
+  "entryPoints": ["apps/backend/src"],
+  "out": "docs/backend",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "includeVersion": true,
+  "tsconfig": "apps/backend/tsconfig.json"
+}

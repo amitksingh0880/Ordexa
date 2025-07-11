@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Linting..."
+bun run lint
+
+# echo "🧠 Type-checking..."
+# bun run tsc
+
+# echo "🎭 Running E2E Tests..."
+# bun run e2e
