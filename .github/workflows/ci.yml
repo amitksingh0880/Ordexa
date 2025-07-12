@@ -25,6 +25,6 @@ jobs:
       - name: ✅ Run all checks (lint, openapi, tsc)
         run: bun run check
 
-      - name: 🧪 Unit tests (optional: if using Vitest)
+      - name: 🧪 Unit tests
         run: bun run test
-        continue-on-error: true # Remove this if test failures should fail the build
+        continue-on-error: true
