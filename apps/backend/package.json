@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "dev": "bun src/index.ts",
-    "generate:types": "openapi-typescript ./spec/index.yml --output ./src/types/api.d.ts"
+    "generate:types": "openapi-typescript ./spec/index.yml --output ./src/types/api.d.ts",
+    "test": "bun test"
   },
   "devDependencies": {
     "@types/bun": "latest",
