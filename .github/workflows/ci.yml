@@ -19,6 +19,9 @@ jobs:
         with:
           bun-version: latest
 
+      - name: 📦 Install root dependencies (for Playwright CLI)
+        run: bun install
+
       - name: 📦 Install frontend dependencies
         run: bun install
         working-directory: apps/frontend
@@ -35,4 +38,3 @@ jobs:
 
       - name: ✅ Run E2E Tests
         run: bun run e2e
-
