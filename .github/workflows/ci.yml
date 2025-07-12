@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  ci:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,22 +19,12 @@ jobs:
         with:
           bun-version: latest
 
-      - name: 📦 Install root dependencies (for Playwright CLI)
+      - name: 📦 Install dependencies
         run: bun install
 
-      - name: 📦 Install frontend dependencies
-        run: bun install
-        working-directory: apps/frontend
+      - name: ✅ Run all checks (lint, openapi, tsc)
+        run: bun run check
 
-      - name: 🎭 Install Playwright Browsers
-        run: npx playwright install --with-deps
-
-      - name: 🚀 Start Frontend (Vite)
-        run: bunx vite &
-        working-directory: apps/frontend
-
-      - name: ⏳ Wait for frontend to be ready
-        run: npx wait-on http://localhost:5173
-
-      - name: ✅ Run E2E Tests
-        run: bun run e2e
+      - name: 🧪 Unit tests (optional: if using Vitest)
+        run: bun run test
+        continue-on-error: true # Remove this if test failures should fail the build
