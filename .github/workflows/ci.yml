@@ -35,4 +35,5 @@ jobs:
 
       - name: ✅ Run E2E Tests
         run: bun run e2e
-        working-directory: apps/frontend
+        working-directory: apps
+
