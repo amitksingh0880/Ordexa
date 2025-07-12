@@ -19,20 +19,15 @@ jobs:
         with:
           bun-version: latest
 
-      - name: 📦 Install dependencies
+      - name: 📦 Install frontend dependencies
         run: bun install
-
-      # - name: 🔍 Biome check + Redocly lint
-      #   run: bun run check
-
-      # - name: 🧪 TypeScript build check (optional)
-      #   run: bun tsc --noEmit || true
+        working-directory: apps/frontend
 
       - name: 🎭 Install Playwright Browsers
         run: npx playwright install --with-deps
 
       - name: 🚀 Start Frontend (Vite)
-        run: bun run dev &
+        run: bunx vite &
         working-directory: apps/frontend
 
       - name: ⏳ Wait for frontend to be ready
@@ -40,3 +35,4 @@ jobs:
 
       - name: ✅ Run E2E Tests
         run: bun run e2e
+        working-directory: apps/frontend
