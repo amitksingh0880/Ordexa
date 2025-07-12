@@ -31,8 +31,8 @@ jobs:
       - name: 🎭 Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: 🚀 Start Frontend (Vite)
-        run: bun run dev &
+      - name: 🚀 Start Frontend (debug)
+        run: bunx vite --debug
         working-directory: apps/frontend
 
       - name: ⏳ Wait for frontend to be ready
