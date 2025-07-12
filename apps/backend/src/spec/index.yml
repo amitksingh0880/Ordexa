@@ -1,0 +1,44 @@
+openapi: 3.1.0
+info:
+  title: Ordexa API
+  version: 1.0.0
+
+paths:
+  /orders:
+    post:
+      summary: Create a new order
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderInput"
+      responses:
+        "201":
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  orderId:
+                    type: string
+        "400":
+          description: Invalid request
+
+components:
+  schemas:
+    OrderInput:
+      type: object
+      required:
+        - userId
+        - totalAmount
+      properties:
+        userId:
+          type: string
+          format: uuid
+        totalAmount:
+          type: number
