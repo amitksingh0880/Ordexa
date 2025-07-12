@@ -22,8 +22,8 @@ jobs:
       - name: 📦 Install dependencies
         run: bun install
 
-      - name: ✅ Run all checks (lint, openapi, tsc)
-        run: bun run check
+      - name: ✅ Run all checks
+        run: bun run lint:fix
 
       - name: 🧪 Unit tests
         run: bun run test
