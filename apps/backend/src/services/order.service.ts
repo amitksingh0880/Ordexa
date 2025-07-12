@@ -1,6 +1,8 @@
 import { prisma } from "../lib/prisma";
 import { randomUUID } from "crypto";
-import type { OrderInput } from "../types/order";
+import type { components } from "../types/api";
+
+type OrderInput = components["schemas"]["OrderInput"];
 
 export class OrderService {
   async createOrder(input: OrderInput): Promise<{ id: string } | undefined> {
