@@ -8,9 +8,10 @@ export const createOrderHandler: Handler = async (
   res: Response,
 ) => {
   try {
-    const { userId, totalAmount } = req.body as {
+    const { userId, totalAmount, status } = req.body as {
       userId?: string;
       totalAmount?: number;
+      status?: string;
     };
 
     if (
@@ -27,7 +28,7 @@ export const createOrderHandler: Handler = async (
     }
 
     const orderService = new OrderService();
-    const order = await orderService.createOrder({ userId, totalAmount });
+    const order = await orderService.createOrder({ userId, totalAmount, status: status ?? "pending" });
 
     if (!order) {
       return res.status(500).json({

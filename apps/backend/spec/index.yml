@@ -26,8 +26,11 @@ paths:
                     type: string
                   orderId:
                     type: string
+                    format: uuid
         "400":
           description: Invalid request
+        "500":
+          description: Internal server error
 
 components:
   schemas:
@@ -36,9 +39,12 @@ components:
       required:
         - userId
         - totalAmount
+        - status
       properties:
         userId:
           type: string
           format: uuid
         totalAmount:
           type: number
+        status:
+          type: string
