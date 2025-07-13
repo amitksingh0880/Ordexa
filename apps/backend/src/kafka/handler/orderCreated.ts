@@ -16,6 +16,11 @@ type OrderCreatedEvent = {
 };
 
 export async function handleOrderCreated(event: OrderCreatedEvent) {
+
+  if (!event.data?.userId) {
+    throw new Error("Missing required field: userId");
+  }
+
   const alreadyProcessed = await isEventProcessed(event.eventId);
   if (alreadyProcessed) {
     console.log(`⚠️ Duplicate event ${event.eventId}, skipping`);

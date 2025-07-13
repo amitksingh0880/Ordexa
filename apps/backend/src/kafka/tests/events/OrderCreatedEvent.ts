@@ -1,5 +1,3 @@
-// src/types/events.ts
-
 export type OrderCreatedEvent = {
   eventId: string;
   orderId: string;

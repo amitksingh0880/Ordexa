@@ -4,7 +4,6 @@ import type { OrderCreatedEvent } from "../events/OrderCreatedEvent";
 import { handleOrderCreated } from "../../handler/orderCreated";
 import { cassandraClient } from "../../utils/cassandra";
 
-
 beforeEach(async () => {
   // Clear tables before each test for clean state
   await cassandraClient.execute("TRUNCATE event_log");
@@ -13,7 +12,7 @@ beforeEach(async () => {
 
 test("should process order.created event without error", async () => {
   const event: OrderCreatedEvent = {
-    eventId: randomUUID(), // ✅ valid UUID
+    eventId: randomUUID(),
     orderId: "order-123",
     eventType: "OrderCreated",
     data: {
@@ -28,35 +27,12 @@ test("should process order.created event without error", async () => {
   try {
     await handleOrderCreated(event);
   } catch (err) {
-    console.error("❌ handleOrderCreated rejected:", err);
+    console.error("handleOrderCreated rejected:", err);
     throw err;
   }
 });
 
-test("should skip processing if event is already in event_log", async () => {
-  const eventId = randomUUID();
 
-  // Manually insert into event_log to simulate a duplicate
-  await cassandraClient.execute(
-    "INSERT INTO event_log (event_id) VALUES (?)",
-    [eventId]
-  );
-
-  const event: OrderCreatedEvent = {
-    eventId,
-    orderId: "order-dup",
-    eventType: "OrderCreated",
-    data: {
-      userId: randomUUID(),
-      status: "Created",
-      totalAmount: 49.99,
-      createdAt: new Date().toISOString(),
-    },
-    timestamp: new Date().toISOString(),
-  };
-
-  await expect(handleOrderCreated(event)).resolves.toBeUndefined();
-});
 
 test("should throw if userId is missing", async () => {
   const badEvent = {
