@@ -6,10 +6,12 @@
   "scripts": {
     "dev": "bun src/index.ts",
     "generate:types": "openapi-typescript ./spec/index.yml --output ./src/types/api.d.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "kafka:consumer": "bun run kafka/consumer/index.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/uuid": "^10.0.0",
     "bun-types": "^1.2.18"
   },
   "peerDependencies": {
@@ -19,6 +21,7 @@
     "@prisma/client": "^6.11.1",
     "cassandra-driver": "^4.8.0",
     "express": "^5.1.0",
-    "prisma": "^6.11.1"
+    "prisma": "^6.11.1",
+    "uuid": "^11.1.0"
   }
 }

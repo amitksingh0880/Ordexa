@@ -1,4 +1,5 @@
 // kafka/handler/orderCreated.ts
+import { error } from "node:console";
 import { isEventProcessed, markEventProcessed } from "../utils/deduplicate";
 import { insertOrderIntoCassandra } from "../utils/insert";
 
@@ -7,6 +8,7 @@ type OrderCreatedEvent = {
   orderId: string;
   eventType: "OrderCreated";
   data: {
+    orderId: string,
     userId: string;
     status: string;
     totalAmount: number;
@@ -23,8 +25,20 @@ export async function handleOrderCreated(event: OrderCreatedEvent) {
   }
 
   console.log("📥 Handling OrderCreated event:", event.orderId);
+   try{
+          await insertOrderIntoCassandra({
+      orderId: event.data.orderId, // pass orderId
+      userId: event.data.userId,
+      status: event.data.status,
+      totalAmount: event.data.totalAmount,
+      createdAt: event.data.createdAt, // should be valid date string
+    });
+   }catch(err){
+          console.error("❌ Failed to insert into Cassandra:", err);
+   }
+    
 
-  await insertOrderIntoCassandra(event.data);
+
   await markEventProcessed(event.eventId);
   console.log("✅ Order inserted & event marked as processed:", event.orderId);
 }

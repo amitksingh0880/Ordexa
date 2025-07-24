@@ -1,7 +1,7 @@
-// kafka/utils/insert.ts
 import { cassandraClient } from "./cassandra";
 
 export async function insertOrderIntoCassandra(data: {
+  orderId: string;
   userId: string;
   status: string;
   totalAmount: number;
@@ -10,14 +10,21 @@ export async function insertOrderIntoCassandra(data: {
   const query = `
     INSERT INTO orders_by_user (
       user_id, order_id, status, total_amount, created_at
-    ) VALUES (?, now(), ?, ?, ?)`;
+    ) VALUES (?, ?, ?, ?, ?)`;
 
   const params = [
     data.userId,
+    data.orderId,
     data.status,
     data.totalAmount,
     new Date(data.createdAt),
   ];
 
-  await cassandraClient.execute(query, params, { prepare: true });
+  console.log("📦 Inserting into Cassandra:", params);
+
+  try {
+    await cassandraClient.execute(query, params, { prepare: true });
+  } catch (err) {
+    console.error("❌ Cassandra insert failed:", err);
+  }
 }
