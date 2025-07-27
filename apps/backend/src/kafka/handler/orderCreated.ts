@@ -1,44 +1,35 @@
-// kafka/handler/orderCreated.ts
-import { error } from "node:console";
-import { isEventProcessed, markEventProcessed } from "../utils/deduplicate";
 import { insertOrderIntoCassandra } from "../utils/insert";
-
-type OrderCreatedEvent = {
-  eventId: string;
-  orderId: string;
-  eventType: "OrderCreated";
-  data: {
-    orderId: string,
-    userId: string;
-    status: string;
-    totalAmount: number;
-    createdAt: string;
-  };
-  timestamp: string;
-};
+import { isEventProcessed, markEventProcessed } from "../utils/deduplicate";
+import type { OrderCreatedEvent } from "../../../types/events";
+import { retry } from "../utils/retry";
 
 export async function handleOrderCreated(event: OrderCreatedEvent) {
-  const alreadyProcessed = await isEventProcessed(event.eventId);
-  if (alreadyProcessed) {
-    console.log(`⚠️ Duplicate event ${event.eventId}, skipping`);
-    return;
-  }
+  const eventId = event.eventId;
 
-  console.log("📥 Handling OrderCreated event:", event.orderId);
-   try{
-          await insertOrderIntoCassandra({
-      orderId: event.data.orderId, // pass orderId
-      userId: event.data.userId,
-      status: event.data.status,
-      totalAmount: event.data.totalAmount,
-      createdAt: event.data.createdAt, // should be valid date string
+  console.log(`📥 Handling OrderCreated event: ${eventId}`);
+
+  try {
+    const alreadyProcessed = await isEventProcessed(eventId);
+    if (alreadyProcessed) {
+      console.log(`🔁 Duplicate event detected: ${eventId}`);
+      return;
+    }
+
+    await retry(() => insertOrderIntoCassandra(event.data), {
+      retries: 5,
+      delay: 1000,
+      factor: 2
     });
-   }catch(err){
-          console.error("❌ Failed to insert into Cassandra:", err);
-   }
-    
 
+    await retry(() => markEventProcessed(eventId), {
+      retries: 5,
+      delay: 1000,
+      factor: 2
+    });
 
-  await markEventProcessed(event.eventId);
-  console.log("✅ Order inserted & event marked as processed:", event.orderId);
+    console.log(`✅ Order inserted & event marked as processed: ${event.data.orderId}`);
+  } catch (error) {
+    console.error(`❌ Failed to process event ${eventId}:`, error);
+    throw error;
+  }
 }

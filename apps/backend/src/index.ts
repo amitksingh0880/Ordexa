@@ -5,9 +5,13 @@ import type { Request as OpenAPIRequest } from "openapi-backend";
 import { createOrderHandler } from "./handlers/order";
 import { getOrdersHandler } from "./handlers/orders/getOrder";
 import { startKafkaConsumer } from "./kafka/consumer/index";
+import { connectConsumer } from "./kafka/consumer";
+import { connectProducer } from "./kafka/producer";
 const app = express();
 app.use(express.json());
 
+connectProducer();
+connectConsumer();
 
 const api = new OpenAPIBackend({
   definition: path.join(__dirname, "../spec/index.yml"),

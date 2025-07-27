@@ -35,3 +35,7 @@ export async function startKafkaConsumer() {
     },
   });
 }
+
+startKafkaConsumer().catch((err) => {
+  console.error("Kafka consumer failed to start:", err);
+});
