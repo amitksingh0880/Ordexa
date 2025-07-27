@@ -31,7 +31,31 @@ paths:
           description: Invalid request
         "500":
           description: Internal server error
-
+          
+  /api/orders/{userId}:
+    get:
+      operationId: getOrdersByUser
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of orders
+  
+    
 components:
   schemas:
     OrderInput:

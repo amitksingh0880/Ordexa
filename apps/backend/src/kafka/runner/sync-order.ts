@@ -28,7 +28,6 @@ export async function runOrderConsumer() {
   });
 }
 
-// Optional: auto-run if file called directly
 if (require.main === module) {
   runOrderConsumer().catch(console.error);
 }
