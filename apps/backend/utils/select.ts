@@ -12,20 +12,23 @@ export type OrderRow = {
 export async function getOrdersByUserId(
   userId: string,
   limit: number,
-  offset: number
-): Promise<OrderRow[]> {
+  pagingState?: string
+): Promise<{ rows: OrderRow[]; pagingState?: string }> {
   const query = `
     SELECT * FROM orders_by_user WHERE user_id = ? LIMIT ?
   `;
   const result = await cassandraClient.execute(query, [userId, limit], {
     prepare: true,
+    pagingState: pagingState,
   });
 
-  return result.rows.map((row) => ({
+  const rows = result.rows.map((row) => ({
     user_id: row["user_id"],
     order_id: row["order_id"],
     status: row["status"],
     total_amount: row["total_amount"],
     created_at: row["created_at"],
   }));
+
+  return { rows, pagingState: result.pagingState };
 }
