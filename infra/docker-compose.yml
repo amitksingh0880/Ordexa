@@ -5,7 +5,7 @@ services:
     image: postgres:15
     container_name: ordexa_postgres
     ports:
-      - "5432:5432"
+      - "5432:5432" 
     environment:
       POSTGRES_DB: ordexa
       POSTGRES_USER: ordexa_user

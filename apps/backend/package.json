@@ -7,7 +7,7 @@
     "dev": "bun src/index.ts",
     "generate:types": "openapi-typescript ./spec/index.yml --output ./src/types/api.d.ts",
     "test": "bun test",
-    "kafka:consumer": "bun run kafka/consumer/index.ts"
+    "kafka:consumer": "bun run src/kafka/consumer/index.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
