@@ -32,16 +32,27 @@ export async function startConsumer() {
         }
 
         console.log(`📦 Inserting into Cassandra:`, data);
-        await insertOrderIntoCassandra({
-          orderId: data.orderId,
-          userId: data.userId,
-          status: data.status,
-          totalAmount: data.totalAmount,
-          createdAt: data.createdAt,
-        });
+        let cassandraInsertSuccess = false;
+        try {
+          await insertOrderIntoCassandra({
+            orderId: data.orderId,
+            userId: data.userId,
+            status: data.status,
+            totalAmount: data.totalAmount,
+            createdAt: data.createdAt,
+          });
+          cassandraInsertSuccess = true;
+        } catch (insertErr) {
+          console.error(`❌ Failed to insert order ${data.orderId} into Cassandra:`, insertErr);
+          // Optionally, send alert/notification here for manual intervention
+        }
 
         await markEventProcessed(eventId);
-        console.log(`✅ Inserted order ${data.orderId} into Cassandra & marked as processed`);
+        if (cassandraInsertSuccess) {
+          console.log(`✅ Inserted order ${data.orderId} into Cassandra & marked as processed`);
+        } else {
+          console.warn(`⚠️  Marked event ${eventId} as processed despite Cassandra insertion failure. Manual intervention may be required.`);
+        }
       } catch (error) {
         console.error("❌ Error processing message:", error);
       }
