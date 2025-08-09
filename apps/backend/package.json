@@ -9,7 +9,9 @@
     "test": "bun test",
     "kafka:consumer": "bun run kafka/consumer/index.ts",
     "db:reset": "bunx prisma migrate reset --force && bunx prisma generate && bun run prisma/seed.ts",
-    "check:seed": "bun run scripts/dev/checkSeed.ts"
+    "check:postgres": "bun run scripts/dev/checkSeed.ts",
+    "seed:cassandra": "bun run scripts/dev/seedCassandra.ts",
+    "check:cassandra": "bun run scripts/dev/checkCassandra.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
