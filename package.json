@@ -42,5 +42,9 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": "bunx biome check --apply --noEmit"
+  },
+  "dependencies": {
+    "@apidevtools/json-schema-ref-parser": "^14.1.1",
+    "openapi-backend": "^5.13.0"
   }
 }

@@ -8,20 +8,36 @@ datasource db {
 }
 
 model Order {
-  id          String   @id @default(uuid())
-  userId      String
-  status      String
-  totalAmount Decimal
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String        @id @default(uuid())
+  userId       String
+  status       String
+  totalAmount  Decimal
+  currency     String        @default("USD") // default currency
+  description  String?       // optional order notes
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?     // for soft delete
+
+  outboxEvents OutboxEvent[] // relation: one order -> many events
+
+  @@index([userId])
+  @@index([status])
 }
 
 model OutboxEvent {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   aggregateId   String
   aggregateType String
   eventType     String
   payload       Json
-  createdAt     DateTime @default(now())
-  processed     Boolean  @default(false)
+  createdAt     DateTime  @default(now())
+  processed     Boolean   @default(false)
+  processedAt   DateTime?
+  retries       Int       @default(0)
+  lastError     String?
+
+  order         Order?    @relation(fields: [aggregateId], references: [id], onDelete: NoAction)
+
+  @@index([aggregateId])
+  @@index([processed])
 }
