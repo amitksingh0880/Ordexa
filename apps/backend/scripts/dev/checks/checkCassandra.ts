@@ -2,17 +2,27 @@
 import "dotenv/config";
 import Table from "cli-table3";
 import { cassandraClient, connectCassandra } from "../../../src/kafka/utils/cassandra";
+
 async function checkCassandra() {
   await connectCassandra();
 
   try {
-    const result = await cassandraClient.execute("SELECT * FROM orders");
+    const result = await cassandraClient.execute("SELECT * FROM orders_by_user");
 
-    console.log(`📦 Retrieved ${result.rowLength} rows from Cassandra orders table`);
+    console.log(`📦 Retrieved ${result.rowLength} rows from Cassandra orders_by_user table`);
 
     const table = new Table({
-      head: ["Order ID", "User ID", "Status", "Total", "Currency", "Description", "Created At"],
-      colWidths: [38, 15, 12, 10, 12, 30, 25],
+      head: [
+        "User ID",
+        "Order ID",
+        "Status",
+        "Total",
+        "Currency",
+        "Description",
+        "Created At",
+        "Updated At",
+      ],
+      colWidths: [15, 38, 12, 10, 12, 30, 25, 25],
     });
 
     result.rows.forEach((row, i) => {
@@ -20,18 +30,18 @@ async function checkCassandra() {
       console.log(`Row ${i}:`, row);
 
       table.push([
-        // Convert UUID to string explicitly
-        row.order_id ? row.order_id.toString() : "",
         row.user_id ?? "",
+        row.order_id ? row.order_id.toString() : "",
         row.status ?? "",
         row.total_amount ?? "",
         row.currency ?? "",
         row.description ?? "",
         row.created_at ? row.created_at.toISOString() : "",
+        row.updated_at ? row.updated_at.toISOString() : "",
       ]);
     });
 
-    console.log("\n📋 Orders in Cassandra:");
+    console.log("\n📋 Orders by User in Cassandra:");
     console.log(table.toString());
   } catch (err) {
     console.error("❌ Error checking Cassandra:", err);
