@@ -1,76 +1,83 @@
-import { beforeEach, expect, test } from "bun:test";
+// src/kafka/tests/handler/orderCreated.test.ts
+import { beforeAll, beforeEach, afterAll, expect, test } from "bun:test";
 import { randomUUID } from "crypto";
-import type { OrderCreatedEvent } from "../events/OrderCreatedEvent";
 import { handleOrderCreated } from "../../handler/orderCreated";
-import { cassandraClient } from "../../utils/cassandra";
+import { cassandraClient, connectCassandra } from "../../utils/cassandra";
+import type { OrderCreatedEvent } from "../../../../types/events";
 
+// Connect once before all tests
+beforeAll(async () => {
+  await connectCassandra();
+});
 
+// Clean up after all tests
+afterAll(async () => {
+  await cassandraClient.shutdown();
+});
+
+// Reset DB state before each test
 beforeEach(async () => {
-  // Clear tables before each test for clean state
   await cassandraClient.execute("TRUNCATE event_log");
   await cassandraClient.execute("TRUNCATE orders_by_user");
 });
 
 test("should process order.created event without error", async () => {
   const event: OrderCreatedEvent = {
-    eventId: randomUUID(), // ✅ valid UUID
-    orderId: "order-123",
+    eventId: randomUUID(),
+    orderId: randomUUID(),
     eventType: "OrderCreated",
     data: {
-      userId: randomUUID(),
+      userId: "123e4567-e89b-12d3-a456-426614174002",
       status: "Created",
-      totalAmount: 120.5,
-      createdAt: new Date().toISOString(),
+      totalAmount: 1500,
+      createdAt: "2025-07-27T15:30:00.000Z",
     },
-    timestamp: new Date().toISOString(),
+    timestamp: "2025-07-27T15:30:00.000Z",
   };
 
-  try {
-    await handleOrderCreated(event);
-  } catch (err) {
-    console.error("❌ handleOrderCreated rejected:", err);
-    throw err;
-  }
+  await expect(handleOrderCreated(event)).resolves.toBeUndefined();
 });
 
 test("should skip processing if event is already in event_log", async () => {
   const eventId = randomUUID();
 
-  // Manually insert into event_log to simulate a duplicate
+  // Insert dummy event into event_log
   await cassandraClient.execute(
     "INSERT INTO event_log (event_id) VALUES (?)",
-    [eventId]
+    [Types.u.fromString(eventId)],
+    { prepare: true }
   );
 
   const event: OrderCreatedEvent = {
     eventId,
-    orderId: "order-dup",
+    orderId: "order-67890",
     eventType: "OrderCreated",
     data: {
-      userId: randomUUID(),
+      userId: "123e4567-e89b-12d3-a456-426614174003",
+      orderId: "order-67890",
       status: "Created",
       totalAmount: 49.99,
-      createdAt: new Date().toISOString(),
+      createdAt: "2025-07-27T15:35:00.000Z",
     },
-    timestamp: new Date().toISOString(),
+    timestamp: "2025-07-27T15:35:00.000Z",
   };
 
   await expect(handleOrderCreated(event)).resolves.toBeUndefined();
 });
 
 test("should throw if userId is missing", async () => {
-  const badEvent = {
+  const badEvent: OrderCreatedEvent = {
     eventId: randomUUID(),
-    orderId: "order-invalid",
+    orderId: "order-11111",
     eventType: "OrderCreated",
     data: {
-      // userId missing intentionally
+      orderId: "order-11111",
       status: "Created",
-      totalAmount: 80,
-      createdAt: new Date().toISOString(),
+      totalAmount: 80.0,
+      createdAt: "2025-07-27T15:40:00.000Z",
     },
-    timestamp: new Date().toISOString(),
-  } as any;
+    timestamp: "2025-07-27T15:40:00.000Z",
+  };
 
   await expect(handleOrderCreated(badEvent)).rejects.toThrow(/userId/i);
 });

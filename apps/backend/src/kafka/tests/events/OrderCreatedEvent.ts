@@ -1,14 +1,14 @@
 // src/types/events.ts
-
 export type OrderCreatedEvent = {
   eventId: string;
   orderId: string;
   eventType: "OrderCreated";
+  timestamp: string;
   data: {
+    orderId: string;
     userId: string;
-    status: string;
     totalAmount: number;
+    status: string;
     createdAt: string;
   };
-  timestamp: string;
 };
