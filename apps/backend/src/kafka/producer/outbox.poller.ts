@@ -1,74 +1,44 @@
-// apps/backend/src/kafka/producer/outbox.poller.ts
-import { PrismaClient } from "@prisma/client";
-import { kafka } from "../utils/kafka";
-import { gracefulShutdown } from "../utils/shutdown";
+import { Kafka } from 'kafkajs';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
-const topic = "order.created";
+const kafka = new Kafka({
+  clientId: process.env.KAFKA_CLIENT_ID || 'ordexa-service',
+  brokers: (process.env.KAFKA_BROKERS || 'localhost:9092').split(','),
+});
+
 const producer = kafka.producer();
-let isShuttingDown = false;
 
 export async function startOutboxPoller() {
   await producer.connect();
-  console.log("🚀 Kafka producer connected.");
+  console.log('[Kafka Producer] Connected');
 
-  gracefulShutdown(async () => {
-    console.log("👋 Shutting down outbox poller...");
-    isShuttingDown = true;
-    await producer.disconnect();
-    await prisma.$disconnect();
-    process.exit(0);
-  });
+  setInterval(async () => {
+    const events = await prisma.outboxEvent.findMany({
+      where: { status: 'pending' },
+      take: Number(process.env.POLLER_BATCH_SIZE) || 100,
+    });
 
-  const pollIntervalMs = 3000;
+    for (const event of events) {
+      try {
+        await producer.send({
+          topic: event.topic,
+          messages: [{ key: event.key, value: JSON.stringify(event.payload) }],
+        });
 
-  const poll = async () => {
-    if (isShuttingDown) return;
+        await prisma.outboxEvent.update({
+          where: { id: event.id },
+          data: { status: 'sent', updatedAt: new Date() },
+        });
 
-    try {
-      const events = await prisma.outboxEvent.findMany({
-        where: { processed: false },
-        take: 10,
-      });
-
-      for (const event of events) {
-        try {
-          await producer.send({
-            topic,
-            messages: [
-              {
-                key: event.id,
-                value: JSON.stringify({
-                  eventId: event.id,
-                  eventType: event.eventType,
-                  data: event.payload,
-                  timestamp: event.createdAt,
-                }),
-              },
-            ],
-          });
-
-          await prisma.outboxEvent.update({
-            where: { id: event.id },
-            data: { processed: true },
-          });
-
-          console.log(`📤 Sent event ${event.id} to Kafka`);
-        } catch (err) {
-          console.error(`❌ Failed to send event ${event.id}`, err);
-        }
+        console.log(`[Outbox] Sent event ${event.id} to ${event.topic}`);
+      } catch (err) {
+        console.error('[Outbox] Send error:', err);
+        await prisma.outboxEvent.update({
+          where: { id: event.id },
+          data: { status: 'error', retries: { increment: 1 } },
+        });
       }
-    } catch (err) {
-      console.error("❌ Polling error:", err);
     }
-
-    setTimeout(poll, pollIntervalMs);
-  };
-
-  poll();
+  }, Number(process.env.POLLER_POLL_INTERVAL_MS) || 1000);
 }
-
-startOutboxPoller().catch((err) => {
-  console.error("❌ Failed to start outbox poller:", err);
-  process.exit(1);
-});

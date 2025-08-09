@@ -1,4 +1,4 @@
-import { cassandraClient } from "../src/kafka/utils/cassandra";
+import { cassandraClient } from "../kafka/utils/cassandra";
 
 // apps/backend/src/utils/select.ts
 export type OrderRow = {

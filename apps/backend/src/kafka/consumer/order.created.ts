@@ -1,65 +1,41 @@
-// apps/backend/src/kafka/consumer/order.created.ts
-import { kafka } from "../utils/kafka";
-import { insertOrderIntoCassandra } from "../utils/insert";
-import { isEventProcessed, markEventProcessed } from "../utils/deduplicate";
+import { Kafka } from 'kafkajs';
+import { cassandra, initCassandra } from '../utils/cassandra';
 
-const topic = "order.created";
-const groupId = "order-consumer-group";
 
-export async function startConsumer() {
-  const consumer = kafka.consumer({ groupId });
+const kafka = new Kafka({
+  clientId: process.env.KAFKA_CLIENT_ID || 'ordexa-service',
+  brokers: (process.env.KAFKA_BROKERS || 'localhost:9092').split(','),
+});
 
+const consumer = kafka.consumer({
+  groupId: process.env.CONSUMER_GROUP || 'ordexa-consumers',
+});
+
+export async function startOrderCreatedConsumer() {
+  await initCassandra();
   await consumer.connect();
-  console.log("📡 Connected to Kafka as consumer");
-
-  await consumer.subscribe({ topic, fromBeginning: false });
-  console.log(`📥 Subscribed to topic: ${topic}`);
+  await consumer.subscribe({
+    topic: process.env.KAFKA_OUTBOX_TOPIC || 'order.created',
+    fromBeginning: false,
+  });
 
   await consumer.run({
-    eachMessage: async ({ message }) => {
+    eachMessage: async ({ topic, partition, message }) => {
       try {
-        if (!message.value) return;
+        const payload = JSON.parse(message.value?.toString() || '{}');
 
-        const event = JSON.parse(message.value.toString());
-        console.log("📥 Received event:", event);
+        // Example: insert into Cassandra read model
+        await cassandra.execute(
+          'INSERT INTO orders_by_customer (customer_id, order_id, status) VALUES (?, ?, ?)',
+          [payload.customerId, payload.id, payload.status],
+          { prepare: true }
+        );
 
-        const { eventId, data } = event;
-
-        const alreadyProcessed = await isEventProcessed(eventId);
-        if (alreadyProcessed) {
-          console.log(`⚠️  Duplicate event skipped: ${eventId}`);
-          return;
-        }
-
-        console.log(`📦 Inserting into Cassandra:`, data);
-        let cassandraInsertSuccess = false;
-        try {
-          await insertOrderIntoCassandra({
-            orderId: data.orderId,
-            userId: data.userId,
-            status: data.status,
-            totalAmount: data.totalAmount,
-            createdAt: data.createdAt,
-          });
-          cassandraInsertSuccess = true;
-        } catch (insertErr) {
-          console.error(`❌ Failed to insert order ${data.orderId} into Cassandra:`, insertErr);
-          // Optionally, send alert/notification here for manual intervention
-        }
-
-        await markEventProcessed(eventId);
-        if (cassandraInsertSuccess) {
-          console.log(`✅ Inserted order ${data.orderId} into Cassandra & marked as processed`);
-        } else {
-          console.warn(`⚠️  Marked event ${eventId} as processed despite Cassandra insertion failure. Manual intervention may be required.`);
-        }
-      } catch (error) {
-        console.error("❌ Error processing message:", error);
+        console.log(`[Consumer] Processed order.created: ${payload.id}`);
+      } catch (err) {
+        console.error(`[Consumer] Error processing message: ${err}`);
+        // TODO: Optionally send to DLQ
       }
     },
   });
 }
-
-startConsumer().catch((err) => {
-  console.error("❌ Consumer startup error:", err);
-});

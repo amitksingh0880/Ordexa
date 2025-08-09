@@ -1,10 +1,15 @@
-import { startConsumer } from "./consumer/order.created";
+import { startOrderCreatedConsumer } from "./consumer/order.created";
 import { startOutboxPoller } from "./producer/outbox.poller";
 
 
-async function main() {
-  await startOutboxPoller();
-  await startConsumer();
+async function bootstrap() {
+  await Promise.all([
+    startOutboxPoller(),
+    startOrderCreatedConsumer(),
+  ]);
 }
 
-main().catch(console.error);
+bootstrap().catch(err => {
+  console.error('[Bootstrap] Fatal error:', err);
+  process.exit(1);
+});
