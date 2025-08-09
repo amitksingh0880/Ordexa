@@ -14,6 +14,6 @@ export async function connectProducer() {
     console.log("✅ Kafka Producer connected");
   } catch (err) {
     console.error("❌ Failed to connect Kafka producer", err);
-    process.exit(1); // fail fast
+    process.exit(1);
   }
 }
