@@ -1,4 +1,5 @@
 import { cassandraClient } from "./cassandra";
+import { types } from 'cassandra-driver';
 
 export async function insertOrderIntoCassandra(data: {
   orderId: string;
@@ -10,21 +11,15 @@ export async function insertOrderIntoCassandra(data: {
   const query = `
     INSERT INTO orders_by_user (
       user_id, order_id, status, total_amount, created_at
-    ) VALUES (?, ?, ?, ?, ?)`;
-
+    ) VALUES (?, ?, ?, ?, ?)
+  `;
   const params = [
-    data.userId,
-    data.orderId,
+    types.Uuid.fromString(data.userId),   // ✅ convert from string to UUID
+    types.Uuid.fromString(data.orderId),  // ✅ convert from string to UUID
     data.status,
     data.totalAmount,
     new Date(data.createdAt),
   ];
 
-  console.log("📦 Inserting into Cassandra:", params);
-
-  try {
-    await cassandraClient.execute(query, params, { prepare: true });
-  } catch (err) {
-    console.error("❌ Cassandra insert failed:", err);
-  }
+  await cassandraClient.execute(query, params, { prepare: true });
 }

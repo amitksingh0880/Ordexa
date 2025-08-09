@@ -1,6 +1,19 @@
 version: "3.8"
 
 services:
+  dev:
+    image: mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm
+    command: sleep infinity
+    volumes:
+      - .:/workspace:cached
+    depends_on:
+      - postgres
+      - kafka
+      - cassandra
+    ports:
+      - "3000:3000"   
+    working_dir: /workspace
+
   postgres:
     image: postgres:15
     container_name: ordexa_postgres
@@ -13,7 +26,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
-  
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     environment:
@@ -34,17 +47,17 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   cassandra:
-     image: cassandra:4.1
-     ports:
+    image: cassandra:4.1
+    ports:
       - "9042:9042"
-     environment:
+    environment:
       CASSANDRA_CLUSTER_NAME: "ordexa-cluster"
       CASSANDRA_DC: "dc1"
       CASSANDRA_RACK: "rack1"
       CASSANDRA_NUM_TOKENS: 8
-     volumes:
+    volumes:
       - cassandra-data:/var/lib/cassandra
-      
+
 volumes:
   pgdata:
   cassandra-data:
