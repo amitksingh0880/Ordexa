@@ -15,25 +15,27 @@ export async function startKafkaConsumer() {
   await consumer.subscribe({ topic: "order.created", fromBeginning: false });
 
   await consumer.run({
-    eachMessage: async ({ topic, partition, message }) => {
-      try {
-        const rawValue = message.value?.toString();
-        if (!rawValue) {
-          console.warn("Received empty message, skipping");
-          return;
-        }
-
-        const event = JSON.parse(rawValue);
-        await handleOrderCreated(event);
-
-        console.log(
-          `Processed event ${event.eventId} from topic ${topic} partition ${partition}`
-        );
-      } catch (error) {
-        console.error("Error processing Kafka message:", error);
+  eachMessage: async ({ topic, partition, message }) => {
+    try {
+      const rawValue = message.value?.toString();
+      if (!rawValue) {
+        console.warn("Received empty message, skipping");
+        return;
       }
-    },
-  });
+
+  const event = JSON.parse(rawValue);
+console.log("Received raw event:", JSON.stringify(event, null, 2));  
+
+
+      await handleOrderCreated(event);
+
+      console.log(`Processed event ${event.eventId} from topic ${topic} partition ${partition}`);
+    } catch (error) {
+      console.error("Error processing Kafka message:", error);
+    }
+  },
+});
+
 }
 
 startKafkaConsumer().catch((err) => {

@@ -1,56 +1,22 @@
-// import { cassandraClient } from "./cassandra";
-
-// export async function insertOrderIntoCassandra(data: {
-//   orderId: string;
-//   userId: string;
-//   status: string;
-//   totalAmount: number;
-//   createdAt: string;
-// }) {
-//   const query = `
-//     INSERT INTO orders_by_user (
-//       user_id, order_id, status, total_amount, created_at
-//     ) VALUES (?, ?, ?, ?, ?)`;
-
-//   const params = [
-//     data.userId,
-//     data.orderId,
-//     data.status,
-//     data.totalAmount,
-//     new Date(data.createdAt),
-//   ];
-
-//   console.log("📦 Inserting into Cassandra:", params);
-
-//   try {
-//     await cassandraClient.execute(query, params, { prepare: true });
-//   } catch (err) {
-//     console.error("❌ Cassandra insert failed:", err);
-//   }
-// }
-
-
-// src/kafka/utils/insert.ts
 import { cassandraClient } from "./cassandra";
 import { types } from "cassandra-driver";
 
 export async function insertOrderIntoCassandra(data: {
-  userId: string;
-  orderId: string;
+  userId: string;       // e.g. "user-1"
+  orderId: string;      // e.g. "11111111-1111-1111-1111-111111111111"
   status: string;
   totalAmount: number;
   createdAt: string;
 }): Promise<void> {
   try {
-    // Validate UUID format
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(data.userId)) {
-      throw new Error(`Invalid UUID format for userId: ${data.userId}`);
-    }
+    console.log("Inserting order into Cassandra:", data);
+
+    // Convert orderId to UUID, userId as string (if your Cassandra schema uses text for user_id)
+    const orderUUID = types.Uuid.fromString(data.orderId);
 
     await cassandraClient.execute(
       "INSERT INTO orders_by_user (user_id, order_id, status, total_amount, created_at) VALUES (?, ?, ?, ?, ?)",
-      [types.Uuid.fromString(data.userId), data.orderId, data.status, data.totalAmount, new Date(data.createdAt)],
+      [data.userId, orderUUID, data.status, data.totalAmount, new Date(data.createdAt)],
       { prepare: true }
     );
   } catch (error) {

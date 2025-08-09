@@ -5,6 +5,19 @@ import { setTimeout } from "node:timers/promises";
 const POLL_INTERVAL_MS = 3000;
 const MAX_RETRIES = 3;
 
+
+
+function getTopicName(eventType: string): string {
+  switch (eventType.toLowerCase()) {
+    case "ordercreated":
+      return "order.created";
+    // add more mappings if needed
+    default:
+      return `order.${eventType.toLowerCase()}`;
+  }
+}
+
+
 async function publishEventWithRetry(event: any, topic: string) {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
@@ -50,7 +63,7 @@ async function pollOutbox() {
     if (events.length === 0) return;
 
     for (const event of events) {
-      const topic = `order.${event.eventType.toLowerCase()}`;
+      const topic = getTopicName(event.eventType);
       await publishEventWithRetry(event, topic);
     }
   } catch (err) {
