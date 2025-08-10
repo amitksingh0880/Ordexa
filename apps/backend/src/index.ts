@@ -6,7 +6,7 @@ import { createOrderHandler } from "./handlers/order";
 import { startKafkaConsumer } from "./kafka/consumer/index";
 import { connectConsumer } from "./kafka/consumer";
 import { connectProducer } from "./kafka/producer";
-import { getOrdersByUser } from "./handlers/getOrdersByUser";
+import { getOrdersByUserHandler } from "./handlers/getOrdersByUser";
 
 const app = express();
 app.use(express.json());
@@ -18,7 +18,7 @@ const api = new OpenAPIBackend({
   definition: path.join(__dirname, "../spec/index.yml"),
   handlers: {
     createOrder: createOrderHandler,
-    getOrdersByUser: getOrdersByUser,
+    getOrdersByUser: getOrdersByUserHandler,
     notFound: (_c, _req, res) => res.status(404).json({ error: "Not found" }),
     validationFail: (c, _req, res) =>
       res.status(400).json({ error: c.validation.errors }),

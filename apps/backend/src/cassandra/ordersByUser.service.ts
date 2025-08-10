@@ -1,21 +1,22 @@
-import { cassandraClient } from "../kafka/utils/cassandra";
+import { Client } from 'cassandra-driver';
 
+const contactPoints = process.env.CASSANDRA_CONTACTPOINTS?.split(',') ?? ['127.0.0.1'];
+const localDataCenter = process.env.CASSANDRA_DATACENTER ?? 'datacenter1';
+const keyspace = process.env.CASSANDRA_KEYSPACE ?? 'ordexa_read';
 
-export async function getOrdersByUser(userId: string, cursor?: string, limit = 10) {
-  const params = [userId];
-  let query = `
-    SELECT order_id, status, total_amount, created_at
-    FROM orders_by_user
-    WHERE user_id = ?
-  `;
+export const cassandraClient = new Client({
+  contactPoints,
+  localDataCenter,
+  keyspace,
+  queryOptions: { prepare: true },
+});
 
-  if (cursor) {
-    query += ` AND created_at <= ?`;
-    params.push(cursor);
+export async function connectCassandra() {
+  if (!cassandraClient.connect  ) {
+    await cassandraClient.connect();
   }
+}
 
-  query += ` LIMIT ${limit};`;
-
-  const result = await cassandraClient.execute(query, params, { prepare: true });
-  return result.rows;
+export async function shutdownCassandra() {
+  await cassandraClient.shutdown();
 }

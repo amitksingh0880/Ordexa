@@ -32,7 +32,50 @@ paths:
         "500":
           description: Internal server error
           
-  /api/orders/{userId}:
+  /orders/{userId}:
+    get:
+      summary: Get orders by userId (Cassandra read model)
+      operationId: getOrdersByUser
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+        - name: pagingState
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orders:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+                  pagingState:
+                    type: string
+                  limit:
+                    type: integer
+        '400':
+          description: Bad Request
+        '500':
+          description: Server Error
+
     get:
       operationId: getOrdersByUser
       parameters:
@@ -72,3 +115,17 @@ components:
           type: number
         status:
           type: string
+    Order:
+      type: object
+      properties:
+        orderId:
+          type: string
+        userId:
+          type: string
+        status:
+          type: string
+        totalAmount:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
