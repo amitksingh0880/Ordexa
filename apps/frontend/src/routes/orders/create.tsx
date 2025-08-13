@@ -20,7 +20,7 @@ function CreateOrderPage() {
         });
         alert("Order created successfully!");
       } catch (err) {
-        alert("Failed to create order");
+        alert("Failed to create orders");
       }
     },
   });
