@@ -36,7 +36,7 @@ function CreateOrderPage() {
         className="space-y-4"
       >
         <div>
-          <label className="block mb-1 font-medium">User ID</label>
+          <label className="block mb-1 font-medium">UniqueId</label>
           <input
             className="border rounded w-full p-2"
             {...form.register("userId")}
