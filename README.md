@@ -8,7 +8,7 @@ A production-ready, scalable Ordering System built with modern tools — powered
 
 ## 🚀 Tech Stack
 
-| Layer         | Technology           | Purpose                                 |
+| Layer         | Technology           | Purposes achieved                               |
 |---------------|----------------------|-----------------------------------------|
 | Frontend      | Bun + Vite           | Lightning-fast SPA                      |
 | Backend       | Express (Bun)        | REST APIs for orders                    |
