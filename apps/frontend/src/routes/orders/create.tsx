@@ -26,38 +26,42 @@ function CreateOrderPage() {
   });
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded shadow">
-      <h1 className="text-xl font-bold mb-4">Create Order</h1>
+    <div className="max-w-lg mx-auto p-8 bg-white rounded-lg shadow-lg">
+      <h1 className="text-2xl font-semibold mb-6 text-center">Create Order</h1>
       <form
         onSubmit={(e) => {
           e.preventDefault();
           form.handleSubmit();
         }}
-        className="space-y-4"
+        className="space-y-6"
       >
         <div>
-          <label className="block mb-1 font-medium">UniqueId</label>
+          <label className="block mb-2 font-medium text-lg text-gray-700">Unique ID</label>
           <input
-            className="border rounded w-full p-2"
+            className="border border-gray-300 rounded-md w-full p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            placeholder="Enter User ID"
             {...form.register("userId")}
           />
         </div>
 
         <div>
-          <label className="block mb-1 font-medium">Total Amount</label>
+          <label className="block mb-2 font-medium text-lg text-gray-700">Total Amount</label>
           <input
             type="number"
-            className="border rounded w-full p-2"
+            className="border border-gray-300 rounded-md w-full p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            placeholder="Enter Total Amount"
             {...form.register("totalAmount")}
           />
         </div>
 
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          Create
-        </button>
+        <div className="flex justify-center">
+          <button
+            type="submit"
+            className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium shadow-md hover:bg-blue-700 transition duration-200"
+          >
+            Create Order
+          </button>
+        </div>
       </form>
     </div>
   );
