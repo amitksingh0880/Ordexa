@@ -1,10 +1,10 @@
 import { useForm } from "@tanstack/react-form";
 import axios from "axios";
 
-export const Route = new Route({
+export const createOrderRoute = {
   path: "/orders/create",
-  component: CreateOrderPage,
-});
+  element: <CreateOrderPage />,
+};
 
 function CreateOrderPage() {
   const form = useForm({
@@ -18,9 +18,10 @@ function CreateOrderPage() {
           userId: value.userId,
           totalAmount: parseFloat(value.totalAmount),
         });
-        alert("Order created successfully!");
+        alert("✅ Order created successfully!");
       } catch (err) {
-        alert("Failed to create orders");
+        alert("❌ Failed to create order.");
+        console.error(err);
       }
     },
   });
@@ -36,21 +37,35 @@ function CreateOrderPage() {
         className="space-y-6"
       >
         <div>
-          <label className="block mb-2 font-medium text-lg text-gray-700">Unique ID</label>
-          <input
-            className="border border-gray-300 rounded-md w-full p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-            placeholder="Enter User ID"
-            {...form.register("userId")}
+          <label className="block mb-2 font-medium text-lg text-gray-700">User ID</label>
+          <form.Field
+            name="userId"
+            children={(field) => (
+              <input
+                className="border border-gray-300 rounded-md w-full p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                placeholder="Enter User ID"
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(e) => field.handleChange(e.target.value)}
+              />
+            )}
           />
         </div>
 
         <div>
           <label className="block mb-2 font-medium text-lg text-gray-700">Total Amount</label>
-          <input
-            type="number"
-            className="border border-gray-300 rounded-md w-full p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-            placeholder="Enter Total Amount"
-            {...form.register("totalAmount")}
+          <form.Field
+            name="totalAmount"
+            children={(field) => (
+              <input
+                type="number"
+                className="border border-gray-300 rounded-md w-full p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                placeholder="Enter Total Amount"
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(e) => field.handleChange(e.target.value)}
+              />
+            )}
           />
         </div>
 
@@ -66,3 +81,5 @@ function CreateOrderPage() {
     </div>
   );
 }
+
+export default CreateOrderPage;
