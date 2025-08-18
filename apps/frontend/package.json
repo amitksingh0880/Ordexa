@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@tanstack/react-form": "^1.19.1",
+    "@tanstack/react-form": "^1.19.2",
     "@tanstack/react-router": "^1.131.5",
     "@tanstack/router-devtools": "^1.131.5",
     "axios": "^1.11.0",
