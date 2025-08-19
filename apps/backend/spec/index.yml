@@ -4,7 +4,7 @@ info:
   version: 1.0.0
 
 paths:
-  /orders:
+  /order/create:
     post:
       summary: Create a new order
       operationId: createOrder
@@ -31,7 +31,7 @@ paths:
           description: Invalid request
         "500":
           description: Internal server error
-          
+
   /orders/{userId}:
     get:
       summary: Get orders by userId (Cassandra read model)
@@ -55,6 +55,11 @@ paths:
           required: false
           schema:
             type: string
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
       responses:
         '200':
           description: OK
@@ -76,29 +81,6 @@ paths:
         '500':
           description: Server Error
 
-    get:
-      operationId: getOrdersByUser
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: limit
-          in: query
-          required: false
-          schema:
-            type: integer
-        - name: offset
-          in: query
-          required: false
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: List of orders
-  
-    
 components:
   schemas:
     OrderInput:
@@ -115,6 +97,9 @@ components:
           type: number
         status:
           type: string
+        description:
+          type: string
+
     Order:
       type: object
       properties:
@@ -123,6 +108,8 @@ components:
         userId:
           type: string
         status:
+          type: string
+        description:
           type: string
         totalAmount:
           type: number

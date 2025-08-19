@@ -14,6 +14,6 @@ function RootLayout() {
         <Link to="/orders/create">Create Order</Link>
       </nav>
       <Outlet />
-    </div>
+    </div> 
   );
 }

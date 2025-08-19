@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/uuid": "^10.0.0",
     "bun-types": "^1.2.18"
@@ -28,6 +29,7 @@
     "cassandra-driver": "^4.8.0",
     "chalk": "^5.5.0",
     "cli-table3": "^0.6.5",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "prisma": "^6.11.1",
