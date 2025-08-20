@@ -8,5 +8,5 @@ export const Route = createFileRoute('/orders/$orderId')({
 
 function OrderDetailWrapper() {
   const { orderId } = Route.useParams();
-  return <OrderDetailPage orderId={orderId} />;
+  return <OrderDetailPage userId={orderId} />;
 }

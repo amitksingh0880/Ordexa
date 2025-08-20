@@ -1,76 +1,82 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-type OrderItem = {
-  id: string;
-  name: string;
-  price: number;
-};
-
 type Order = {
-  id: string;
+  orderId: string;
   userId: string;
   totalAmount: number;
   status: string;
-  items: OrderItem[];
+  description?: string;
+  createdAt: string;
 };
 
-type OrderDetailPageProps = {
-  orderId: string;
+type OrderListResponse = {
+  orders: Order[];
+  pagingState?: string;
+  limit?: number;
 };
 
-function OrderDetailPage({ orderId }: OrderDetailPageProps) {
-  const [order, setOrder] = useState<Order | null>(null);
+type UserOrdersPageProps = {
+  userId: string;
+};
+
+function UserOrdersPage({ userId }: UserOrdersPageProps) {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchOrder() {
+    async function fetchOrders() {
       try {
-        const response = await axios.get<Order>(`/api/orders/${orderId}`);
-        setOrder(response.data);
+        const response = await axios.get<OrderListResponse>(
+          `http://localhost:5000/orders/${userId}`
+        );
+        setOrders(response.data.orders);
       } catch (err) {
-        alert("❌ Failed to fetch order details");
+        alert("❌ Failed to fetch orders");
         console.error(err);
+      } finally {
+        setLoading(false);
       }
     }
 
-    fetchOrder();
-  }, [orderId]);
+    fetchOrders();
+  }, [userId]);
 
-  if (!order) return <div className="text-center py-10">Loading...</div>;
+  if (loading) return <div className="text-center py-10">Loading...</div>;
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded shadow">
-      <h1 className="text-2xl font-semibold mb-6">Order Details</h1>
-      <div className="space-y-4">
-        <div>
-          <strong>Order ID:</strong> {order.id}
-        </div>
-        <div>
-          <strong>User ID:</strong> {order.userId}
-        </div>
-        <div>
-          <strong>Total Amount:</strong> ${order.totalAmount?.toFixed(2)}
-        </div>
-        <div>
-          <strong>Status:</strong> {order.status}
-        </div>
-        <div>
-          <strong>Items:</strong>
-          {order.items?.length > 0 ? (
-            <ul className="space-y-2 list-disc list-inside">
-              {order.items.map((item) => (
-                <li key={item.id}>
-                  {item.name} - ${item.price.toFixed(2)}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500">No items in this order.</p>
-          )}
-        </div>
-      </div>
+      <h1 className="text-2xl font-semibold mb-6">Orders for User {userId}</h1>
+      {orders.length === 0 ? (
+        <p className="text-gray-500">No orders found.</p>
+      ) : (
+        <ul className="space-y-4">
+          {orders.map((order) => (
+            <li key={order.orderId} className="p-4 border rounded shadow-sm">
+              <p>
+                <strong>Order ID:</strong> {order.orderId}
+              </p>
+              <p>
+                <strong>Total:</strong> ₹{order.totalAmount.toFixed(2)}
+              </p>
+              <p>
+                <strong>Status:</strong> {order.status}
+              </p>
+              {order.description && (
+                <p>
+                  <strong>Description:</strong> {order.description}
+                </p>
+              )}
+              <p>
+                <strong>Created At:</strong>{" "}
+                {new Date(order.createdAt).toLocaleString()}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
 
-export default OrderDetailPage;
+export default UserOrdersPage;

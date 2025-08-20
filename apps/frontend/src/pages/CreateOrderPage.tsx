@@ -1,25 +1,33 @@
-// src/pages/CreateOrderPage.tsx
 import { useForm } from "@tanstack/react-form";
 import axios from "axios";
+import { v4 as uuidv4 } from "uuid";
 
 export default function CreateOrderPage() {
   const form = useForm({
     defaultValues: {
-      userId: "",
+      userId: uuidv4(), // 🔧 Auto-generate UUID here
       totalAmount: "",
+      status: "Created",
+      description: "",
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: async ({ value, formApi }) => {
       try {
-        await axios.post("/api/orders", {
+        await axios.post("http://localhost:5000/order/create", {
           userId: value.userId,
           totalAmount: parseFloat(value.totalAmount),
+          status: value.status,
+          description: value.description,
         });
         alert("✅ Order created successfully!");
+        // Reset form and generate new UUID
+        formApi.reset();
+        formApi.setFieldValue("userId", uuidv4());
       } catch (err) {
         alert("❌ Failed to create order.");
         console.error(err);
       }
-    },
+    }
+
   });
 
   return (
@@ -32,22 +40,22 @@ export default function CreateOrderPage() {
         }}
         className="space-y-6"
       >
+        {/* User ID (readonly) */}
         <div>
           <label className="block mb-2 font-medium text-lg text-gray-700">User ID</label>
           <form.Field
             name="userId"
             children={(field) => (
               <input
-                className="border border-gray-300 rounded-md w-full p-3"
-                placeholder="Enter User ID"
+                className="border border-gray-300 rounded-md w-full p-3 bg-gray-100"
                 value={field.state.value}
-                onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value)}
+                readOnly
               />
             )}
           />
         </div>
 
+        {/* Total Amount */}
         <div>
           <label className="block mb-2 font-medium text-lg text-gray-700">Total Amount</label>
           <form.Field
@@ -65,6 +73,44 @@ export default function CreateOrderPage() {
           />
         </div>
 
+        {/* Status */}
+        <div>
+          <label className="block mb-2 font-medium text-lg text-gray-700">Status</label>
+          <form.Field
+            name="status"
+            children={(field) => (
+              <select
+                className="border border-gray-300 rounded-md w-full p-3"
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(e) => field.handleChange(e.target.value)}
+              >
+                <option value="Created">Created</option>
+                <option value="Pending">Pending</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            )}
+          />
+        </div>
+
+        {/* Description */}
+        <div>
+          <label className="block mb-2 font-medium text-lg text-gray-700">Description</label>
+          <form.Field
+            name="description"
+            children={(field) => (
+              <textarea
+                className="border border-gray-300 rounded-md w-full p-3"
+                placeholder="Enter description"
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(e) => field.handleChange(e.target.value)}
+              />
+            )}
+          />
+        </div>
+
+        {/* Submit Button */}
         <div className="flex justify-center">
           <button
             type="submit"

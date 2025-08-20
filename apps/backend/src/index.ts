@@ -7,9 +7,11 @@ import { startKafkaConsumer } from "./kafka/consumer/index";
 import { connectConsumer } from "./kafka/consumer";
 import { connectProducer } from "./kafka/producer";
 import { getOrdersByUserHandler } from "./handlers/getOrdersByUser";
+import cors from "cors";
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 connectProducer();
 connectConsumer();
