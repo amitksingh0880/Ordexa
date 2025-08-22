@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-
+import { toast } from "sonner";
 type Order = {
   orderId: string;
   userId: string;
@@ -31,8 +31,9 @@ function UserOrdersPage({ userId }: UserOrdersPageProps) {
           `http://localhost:5000/orders/${userId}`
         );
         setOrders(response.data.orders);
+        toast.success("✅ Orders fetched successfully");
       } catch (err) {
-        alert("❌ Failed to fetch orders");
+        toast.error("❌ Failed to fetch orders");
         console.error(err);
       } finally {
         setLoading(false);
