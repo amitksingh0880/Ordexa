@@ -1,11 +1,12 @@
 import { useForm } from "@tanstack/react-form";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
+import { toast } from "sonner";
 
 export default function CreateOrderPage() {
   const form = useForm({
     defaultValues: {
-      userId: uuidv4(), // 🔧 Auto-generate UUID here
+      userId: uuidv4(),
       totalAmount: "",
       status: "Created",
       description: "",
@@ -18,16 +19,15 @@ export default function CreateOrderPage() {
           status: value.status,
           description: value.description,
         });
-        alert("✅ Order created successfully!");
-        // Reset form and generate new UUID
+
+        toast.success("✅ Order created successfully!");
         formApi.reset();
         formApi.setFieldValue("userId", uuidv4());
       } catch (err) {
-        alert("❌ Failed to create order.");
+        toast.error("❌ Failed to create order.");
         console.error(err);
       }
-    }
-
+    },
   });
 
   return (
