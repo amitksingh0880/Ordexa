@@ -13,12 +13,12 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
-  
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
-    ports:
+    ports: 
       - "2181:2181"
 
   kafka:
@@ -34,15 +34,15 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   cassandra:
-     image: cassandra:4.1
-     ports:
+    image: cassandra:4.1
+    ports:
       - "9042:9042"
-     environment:
+    environment:
       CASSANDRA_CLUSTER_NAME: "ordexa-cluster"
       CASSANDRA_DC: "dc1"
       CASSANDRA_RACK: "rack1"
       CASSANDRA_NUM_TOKENS: 8
-     volumes:
+    volumes:
       - cassandra-data:/var/lib/cassandra
 
   otel-collector:
@@ -91,7 +91,7 @@ services:
       - "3001:3000"
     depends_on: [prometheus, loki, jaeger]
     restart: unless-stopped
-      
+
 volumes:
   pgdata:
   cassandra-data:
