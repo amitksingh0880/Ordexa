@@ -9,6 +9,9 @@ import cors from "cors";
 import { trace, context, metrics } from "@opentelemetry/api";
 import { sdk } from "./otel/index";
 import type { ErrorRequestHandler } from "express";
+import { logs } from "@opentelemetry/api-logs";
+
+const logger = logs.getLogger("backend-logger");
 
 // ------------------------------------------------------
 // Metrics
@@ -27,7 +30,16 @@ app.use(cors());
 
 // Healthcheck route (for readiness & tracing validation)
 app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok" });
+  logger.emit({
+    severityText: "INFO",
+    body: "💓 Health check pinged",
+    attributes: {
+      path: "/health",
+      status: 200,
+    },
+  });
+
+  res.json({ status: "ok" });
 });
 
 // Middleware to trace all HTTP requests

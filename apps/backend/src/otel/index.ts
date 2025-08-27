@@ -3,14 +3,17 @@ import { NodeSDK } from "@opentelemetry/sdk-node";
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
-import { ConsoleSpanExporter, BatchSpanProcessor, TraceIdRatioBasedSampler } from "@opentelemetry/sdk-trace-node";
+import { ConsoleSpanExporter, BatchSpanProcessor, TraceIdRatioBasedSampler, NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
 import { ConsoleMetricExporter, PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
-import { ConsoleLogRecordExporter, SimpleLogRecordProcessor } from "@opentelemetry/sdk-logs";
+import { ConsoleLogRecordExporter, SimpleLogRecordProcessor, type LogRecordExporter, type ReadableLogRecord } from "@opentelemetry/sdk-logs";
 import { PrometheusExporter } from "@opentelemetry/exporter-prometheus";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { PrismaInstrumentation } from "@prisma/instrumentation";
 import { logs } from "@opentelemetry/api-logs";
 import { metrics } from "@opentelemetry/api";
+import fs from "node:fs";
+import { Writable } from "node:stream";
+
 
 // ------------------------------------------------------
 // Resource
@@ -19,6 +22,25 @@ const resource = resourceFromAttributes({
   [SemanticResourceAttributes.SERVICE_NAME]: "my-backend",
   [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: process.env.NODE_ENV || "development",
 });
+
+const LOG_FILE_PATH = "./logs/ordexa-backend.log";
+
+class FileLogRecordExporter implements LogRecordExporter {
+  private file = fs.createWriteStream(LOG_FILE_PATH, { flags: "a" });
+
+  export(logs: ReadableLogRecord[], resultCallback: (result: unknown) => void): void {
+    for (const record of logs) {
+      this.file.write(JSON.stringify(record.toJSON()) + "\n");
+    }
+    resultCallback({ code: 0 });
+  }
+
+  shutdown(): Promise<void> {
+    return new Promise((resolve) => {
+      this.file.end(() => resolve());
+    });
+  }
+}
 
 // ------------------------------------------------------
 // Console Exporters
@@ -42,10 +64,7 @@ const logExporter = new ConsoleLogRecordExporter();
 export const sdk = new NodeSDK({
   resource,
   spanProcessors: [new BatchSpanProcessor(traceExporter)],
-  traceSampler: new TraceIdRatioBasedSampler(1.0),
-  metricReaders: [
-    new PeriodicExportingMetricReader({ exporter: metricExporter }),
-  ],
+  metricReader: metricExporter,
   logRecordProcessors: [
     new SimpleLogRecordProcessor(logExporter),
   ],
