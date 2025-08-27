@@ -24,6 +24,11 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// Healthcheck route (for readiness & tracing validation)
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
 // Middleware to trace all HTTP requests
 app.use((req, res, next) => {
   const tracer = trace.getTracer("backend");
@@ -31,7 +36,7 @@ app.use((req, res, next) => {
     attributes: {
       "http.method": req.method,
       "http.route": req.path,
-      "http.url": req.url,
+      "http.url": req.originalUrl,
     },
   });
 
@@ -50,11 +55,20 @@ app.use((req, res, next) => {
   });
 });
 
-// Kafka connections
-connectProducer();
-connectConsumer();
+// Error handling middleware (to trace uncaught errors)
+app.use((err, req, res, next) => {
+  const span = trace.getSpan(context.active());
+  if (span) {
+    span.recordException(err);
+    span.setStatus({ code: 2, message: err.message }); // 2 = ERROR
+  }
+  console.error("❌ Unhandled Error:", err);
+  res.status(500).json({ error: "Internal Server Error" });
+});
 
+// ------------------------------------------------------
 // OpenAPIBackend setup
+// ------------------------------------------------------
 const api = new OpenAPIBackend({
   definition: path.join(__dirname, "../spec/index.yml"),
   handlers: {
@@ -72,14 +86,18 @@ app.use((req, res) => api.handleRequest(req as OpenAPIRequest, req, res));
 // Main entrypoint
 // ------------------------------------------------------
 async function main() {
-  await sdk.start(); // ✅ Start OpenTelemetry SDK before server
+  await sdk.start(); // ✅ Start OpenTelemetry SDK before any instrumentation
+
+  // Start Kafka connections (after OTel)
+  connectProducer();
+  connectConsumer();
 
   const PORT = process.env.PORT || 5000;
   const server = app.listen(PORT, () => {
     console.log(`🚀 Backend running at http://localhost:${PORT}`);
   });
 
-  // Graceful shutdown
+  // Graceful shutdown for Docker / Prod
   for (const sig of ["SIGINT", "SIGTERM"] as const) {
     process.on(sig, async () => {
       console.log(`📦 Caught ${sig}, shutting down...`);
