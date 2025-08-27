@@ -1,14 +1,14 @@
+// otel/index.ts
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
-
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { ConsoleSpanExporter, BatchSpanProcessor, TraceIdRatioBasedSampler } from "@opentelemetry/sdk-trace-node";
 import { ConsoleMetricExporter, PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
 import { ConsoleLogRecordExporter, SimpleLogRecordProcessor } from "@opentelemetry/sdk-logs";
-
+import { PrometheusExporter } from "@opentelemetry/exporter-prometheus";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { PrismaInstrumentation } from "@prisma/instrumentation";
-
 import { logs } from "@opentelemetry/api-logs";
 import { metrics } from "@opentelemetry/api";
 
@@ -23,8 +23,17 @@ const resource = resourceFromAttributes({
 // ------------------------------------------------------
 // Console Exporters
 // ------------------------------------------------------
-const traceExporter = new ConsoleSpanExporter();
-const metricExporter = new ConsoleMetricExporter();
+const traceExporter = new OTLPTraceExporter({
+  url: "http://localhost:4318/v1/traces", // Jaeger OTLP HTTP endpoint
+});
+
+const metricExporter = new PrometheusExporter(
+  { port: 9464, endpoint: "/metrics" },  // 👈 exposes at localhost:9464/metrics
+  () => console.log("✅ Prometheus scrape endpoint: http://localhost:9464/metrics")
+);
+
+
+// const metricExporter = new ConsoleMetricExporter();
 const logExporter = new ConsoleLogRecordExporter();
 
 // ------------------------------------------------------
@@ -35,9 +44,7 @@ export const sdk = new NodeSDK({
   spanProcessors: [new BatchSpanProcessor(traceExporter)],
   traceSampler: new TraceIdRatioBasedSampler(1.0),
   metricReaders: [
-    new PeriodicExportingMetricReader({
-      exporter: metricExporter,
-    }),
+    new PeriodicExportingMetricReader({ exporter: metricExporter }),
   ],
   logRecordProcessors: [
     new SimpleLogRecordProcessor(logExporter),

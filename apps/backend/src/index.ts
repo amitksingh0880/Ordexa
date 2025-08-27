@@ -8,6 +8,7 @@ import { connectProducer } from "./kafka/producer";
 import cors from "cors";
 import { trace, context, metrics } from "@opentelemetry/api";
 import { sdk } from "./otel/index";
+import type { ErrorRequestHandler } from "express";
 
 // ------------------------------------------------------
 // Metrics
@@ -56,7 +57,16 @@ app.use((req, res, next) => {
 });
 
 // Error handling middleware (to trace uncaught errors)
-app.use((err, req, res, next) => {
+interface ErrorHandlerRequest extends express.Request {}
+interface ErrorHandlerResponse extends express.Response {}
+interface ErrorHandlerNextFunction extends express.NextFunction {}
+
+const errorHandler: ErrorRequestHandler = (
+  err: Error,
+  req: ErrorHandlerRequest,
+  res: ErrorHandlerResponse,
+  next: ErrorHandlerNextFunction
+) => {
   const span = trace.getSpan(context.active());
   if (span) {
     span.recordException(err);
@@ -64,7 +74,9 @@ app.use((err, req, res, next) => {
   }
   console.error("❌ Unhandled Error:", err);
   res.status(500).json({ error: "Internal Server Error" });
-});
+};
+
+app.use(errorHandler);
 
 // ------------------------------------------------------
 // OpenAPIBackend setup
