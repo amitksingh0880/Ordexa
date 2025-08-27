@@ -13,15 +13,13 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
-    networks:
-      - observability
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
     ports: 
       - "2181:2181"
-    networks:
-      - observability
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -34,8 +32,6 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    networks:
-      - observability
 
   cassandra:
     image: cassandra:4.1
@@ -48,8 +44,6 @@ services:
       CASSANDRA_NUM_TOKENS: 8
     volumes:
       - cassandra-data:/var/lib/cassandra
-    networks:
-      - observability
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
@@ -57,24 +51,20 @@ services:
     volumes:
       - ./otel-collector.yaml:/etc/otel-collector.yaml:ro
     ports:
-      - "4317:4317"
-      - "4318:4318"
-      - "8889:8889"
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "8889:8889"   # Prometheus scrape (Collector metrics exporter)
     restart: unless-stopped
-    networks:
-      - observability
 
   jaeger:
     image: jaegertracing/all-in-one:1.57
     container_name: jaeger
     ports:
-      - "16686:16686"
-      - "4317:4317"
-      - "4318:4318"
+      - "16686:16686"   # Jaeger UI
+      - "4317:4317"     # OTLP gRPC (not used here)
+      - "4318:4318"     # OTLP HTTP (what you'll use)
     environment:
       - COLLECTOR_OTLP_ENABLED=true
-    networks:
-      - observability
 
   loki:
     image: grafana/loki:2.9.8
@@ -82,8 +72,6 @@ services:
     ports:
       - "3100:3100"
     restart: unless-stopped
-    networks:
-      - observability
 
   prometheus:
     image: prom/prometheus
@@ -94,8 +82,6 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
-    networks:
-      - observability
 
   grafana:
     image: grafana/grafana
@@ -104,13 +90,7 @@ services:
       - "3000:3000"
     depends_on:
       - prometheus
-    networks:
-      - observability
 
 volumes:
   pgdata:
   cassandra-data:
-
-networks:
-  observability:
-    driver: bridge
