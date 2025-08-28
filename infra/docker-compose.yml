@@ -57,13 +57,14 @@ services:
     restart: unless-stopped
 
   jaeger:
-    image: jaegertracing/all-in-one:latest
-    environment:
-      COLLECTOR_OTLP_ENABLED: "true"
+    image: jaegertracing/all-in-one:1.57
+    container_name: jaeger
     ports:
-      - "16686:16686" # Jaeger UI
-      - "14250:14250" # gRPC ingest (from Collector)
-    restart: unless-stopped
+      - "16686:16686"   # Jaeger UI
+      - "4317:4317"     # OTLP gRPC (not used here)
+      - "4318:4318"     # OTLP HTTP (what you'll use)
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
 
   loki:
     image: grafana/loki:2.9.8
@@ -73,24 +74,22 @@ services:
     restart: unless-stopped
 
   prometheus:
-    image: prom/prometheus:latest
-    volumes:
-      - ./prometheus.yaml:/etc/prometheus/prometheus.yml:ro
-    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    image: prom/prometheus
+    container_name: prometheus
     ports:
       - "9090:9090"
-    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
 
   grafana:
-    image: grafana/grafana:latest
-    environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin
-    volumes:
-      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+    image: grafana/grafana
+    container_name: grafana
     ports:
-      - "3001:3000"
-    depends_on: [prometheus, loki, jaeger]
-    restart: unless-stopped
+      - "3000:3000"
+    depends_on:
+      - prometheus
 
 volumes:
   pgdata:
