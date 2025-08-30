@@ -66,13 +66,6 @@ services:
     environment:
       - COLLECTOR_OTLP_ENABLED=true
 
-  loki:
-    image: grafana/loki:2.9.8
-    command: -config.file=/etc/loki/local-config.yaml
-    ports:
-      - "3100:3100"
-    restart: unless-stopped
-
   prometheus:
     image: prom/prometheus
     container_name: prometheus
@@ -90,7 +83,26 @@ services:
       - "3000:3000"
     depends_on:
       - prometheus
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning
 
+  loki:
+    image: grafana/loki:2.9.3
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+
+  promtail:
+    image: grafana/promtail:2.9.3
+    container_name: promtail
+    volumes:
+    - ./logs:/app/logs
+    - ./infra/promtail-config.yaml:/etc/promtail/promtail.yaml
+    command: -config.file=/etc/promtail/promtail.yaml
+    depends_on:
+      - loki
+  
 volumes:
   pgdata:
   cassandra-data:
