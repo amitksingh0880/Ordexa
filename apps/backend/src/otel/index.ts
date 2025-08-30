@@ -25,22 +25,22 @@ const resource = resourceFromAttributes({
 
 const LOG_FILE_PATH = "./logs/ordexa-backend.log";
 
-class FileLogRecordExporter implements LogRecordExporter {
-  private file = fs.createWriteStream(LOG_FILE_PATH, { flags: "a" });
+// class FileLogRecordExporter implements LogRecordExporter {
+//   private file = fs.createWriteStream(LOG_FILE_PATH, { flags: "a" });
 
-  export(logs: ReadableLogRecord[], resultCallback: (result: unknown) => void): void {
-    for (const record of logs) {
-      this.file.write(JSON.stringify(record.toJSON()) + "\n");
-    }
-    resultCallback({ code: 0 });
-  }
+//   // export(logs: ReadableLogRecord[], resultCallback: (result: ExportResult) => void): void {
+//   //   for (const record of logs) {
+//   //     this.file.write(JSON.stringify(record.toJSON()) + "\n");
+//   //   }
+//   //   resultCallback({ code: 0 });
+//   // }
 
-  shutdown(): Promise<void> {
-    return new Promise((resolve) => {
-      this.file.end(() => resolve());
-    });
-  }
-}
+//   shutdown(): Promise<void> {
+//     return new Promise((resolve) => {
+//       this.file.end(() => resolve());
+//     });
+//   }
+// }
 
 // ------------------------------------------------------
 // Console Exporters
