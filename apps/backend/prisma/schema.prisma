@@ -41,3 +41,14 @@ model OutboxEvent {
   @@index([aggregateId])
   @@index([processed])
 }
+
+model SagaExecution {
+  id           String   @id @default(uuid())
+  sagaName     String
+  status       String
+  steps        Json
+  compensated  Boolean
+  startedAt    DateTime
+  finishedAt   DateTime
+}
+
