@@ -38,7 +38,10 @@ import type { SagaStep } from "./types";
 export class Saga {
   private executedSteps: SagaStep[] = [];
 
-  constructor(private steps: SagaStep[]) {}
+  constructor(
+    private steps: SagaStep[],
+    private sagaName: string = "UnnamedSaga"
+  ) {}
 
   public async execute(): Promise<void> {
     for (const step of this.steps) {
