@@ -14,7 +14,7 @@
     "e2e": "playwright test --config apps/e2e/playwright.config.ts",
     "lint": "bunx biome check",
     "lint:fix": "bunx biome check --apply",
-    "openapi:lint": "bunx @redocly/cli lint",
+    "openapi:lint": "bunx @redocly/cli lint apps/backend/spec/index.yml",
     "tsc": "bun run tsc:backend && bun run tsc:admin && bun run tsc:storefront",
     "tsc:backend": "bunx tsc -p apps/backend/tsconfig.json --noEmit",
     "tsc:admin": "bunx tsc -p apps/admin/tsconfig.app.json --noEmit",
