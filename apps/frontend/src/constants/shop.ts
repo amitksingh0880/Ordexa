@@ -59,6 +59,15 @@ export const SHOP = {
 
   collectionsPage: {
     sortLabel: "Sort By",
+    defaultSort: "featured",
+    sortOptions: [
+      { value: "featured", label: "Featured" },
+      { value: "price-asc", label: "Price: Low to High" },
+      { value: "price-desc", label: "Price: High to Low" },
+    ],
+    informedTitle: "Stay Informed.",
+    informedBody:
+      "Join our newsletter for exclusive access to upcoming Essence Series limited drops.",
     colorFilterLabel: "Color",
     seriesFilterLabel: "Series",
     curation: {
@@ -70,11 +79,18 @@ export const SHOP = {
   },
 
   product: {
+    notFound: "Object not found.",
+    backToShop: "Back to Collection",
     chooseFinish: "Choose Finish",
     addToBag: "Add to Bag",
     findInStore: "Find in Store",
     reviewsSuffix: "REVIEWS",
     specTitle: "Technical Specification",
+    showcase: {
+      title: "Precision of Silence.",
+      body: "Experience a noise floor so low it creates a void, allowing every transient detail of your medium to emerge with uncompromised strategic clarity.",
+      cta: "Explore Engineering",
+    },
     relatedTitle: "Related Objects",
     relatedViewAll: "View All Collections",
     relatedLimit: 3,
@@ -92,6 +108,8 @@ export const SHOP = {
     shippingValue: "Calculated at checkout",
     total: "Total",
     checkout: "Checkout Now",
+    checkoutSuccess: "Order placed — thank you.",
+    addedToBag: "Added to your bag.",
     checkoutNote: "Taxes and shipping calculated at payment step",
     empty: "Your bag is empty.",
     emptyCta: "Explore Collection",
@@ -129,7 +147,7 @@ export const SHOP = {
   },
 } as const;
 
-export const formatPrice = (amount: number, currency = SHOP.currency.code): string =>
+export const formatPrice = (amount: number, currency: string = SHOP.currency.code): string =>
   new Intl.NumberFormat(SHOP.currency.locale, {
     style: "currency",
     currency,

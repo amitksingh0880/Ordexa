@@ -16,6 +16,7 @@ export const ROUTES = {
   ordersByUser: (userId: string) => `/orders/${userId}`,
   shop: "/shop",
   shopCollections: "/shop/collections",
+  shopProductPattern: "/shop/products/$productId",
   shopProduct: (slug: string) => `/shop/products/${slug}`,
 } as const;
 
@@ -83,6 +84,7 @@ export const CURRENCY = {
 export const STORAGE_KEYS = {
   userIdHistory: "ordexa-user-id-history",
   lastUserId: "ordexa-user-id",
+  cart: "ordexa-shop-cart",
 } as const;
 
 export const USER_ID_HISTORY_LIMIT = 5;
