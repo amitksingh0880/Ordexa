@@ -60,15 +60,10 @@ export const ORDER_DEFAULTS = {
   status: "Created",
 } as const;
 
-export const PRODUCT_PRICES: Record<string, number> = {
-  "DEMO-SKU": 120.50,
-  "WIDGET-PRO": 299.99,
-  "WIDGET-LITE": 49.99,
-};
-
+// Currency for the admin UI — matches the storefront catalog (USD).
 export const CURRENCY = {
-  locale: "en-IN",
-  code: "INR",
+  locale: "en-US",
+  code: "USD",
 } as const;
 
 // localStorage keys + limits for the User ID helper in the sidebar.

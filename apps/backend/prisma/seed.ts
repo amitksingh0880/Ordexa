@@ -351,8 +351,28 @@ async function main() {
       create: p,
     });
   }
+
+  // Mirror the catalog into the Inventory model so the admin dashboard tracks the
+  // same products (sku = product slug) the storefront sells.
+  for (const [index, p] of products.entries()) {
+    const available = index === 3 ? 0 : ((index * 37) % 100) + 6;
+    const inventory = {
+      sku: p.slug,
+      name: p.name,
+      price: p.price,
+      currency: p.currency ?? "USD",
+      available,
+      reserved: index % 4 === 0 ? 2 : 0,
+    };
+    await prisma.inventory.upsert({
+      where: { sku: p.slug },
+      update: inventory,
+      create: inventory,
+    });
+  }
+
   console.log(
-    `✅ Seeded ${collections.length} collections and ${products.length} products`,
+    `✅ Seeded ${collections.length} collections, ${products.length} products, and ${products.length} inventory items`,
   );
 }
 

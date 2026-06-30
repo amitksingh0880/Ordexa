@@ -7,7 +7,7 @@ import { RefreshCw, ShoppingBag, Truck, Info, CreditCard, ShieldCheck } from "lu
 
 import { createOrder, getInventory } from "@/lib/api-client";
 import type { InventoryItem } from "@/types/domain";
-import { ORDER_DEFAULTS, PRODUCT_PRICES, CURRENCY } from "@/constants/app";
+import { ORDER_DEFAULTS, CURRENCY } from "@/constants/app";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@ui/components/ui/card";
 import { Button } from "@ui/components/ui/button";
 import { AutoForm, type FieldConfig } from "@ui/components/ui/auto-form";
@@ -36,7 +36,7 @@ export default function CreateOrderPage() {
   });
 
   const selectedItem = items.find((i) => i.sku === formValues.sku);
-  const unitPrice = formValues.sku ? (PRODUCT_PRICES[formValues.sku] ?? 0) : 0;
+  const unitPrice = selectedItem?.price ?? 0;
   const calculatedTotal = unitPrice * (formValues.quantity ?? 1);
 
   // Sync calculation updates to the form values
@@ -60,7 +60,7 @@ export default function CreateOrderPage() {
           setFormValues((prev) => ({
             ...prev,
             sku: firstAvailable.sku,
-            totalAmount: (PRODUCT_PRICES[firstAvailable.sku] ?? 0) * (prev.quantity ?? 1),
+            totalAmount: firstAvailable.price * (prev.quantity ?? 1),
           }));
         }
       })
@@ -93,7 +93,7 @@ export default function CreateOrderPage() {
         userId: newUserId,
         sku: firstAvailable?.sku || "",
         quantity: ORDER_DEFAULTS.quantity,
-        totalAmount: firstAvailable ? (PRODUCT_PRICES[firstAvailable.sku] ?? 0) * ORDER_DEFAULTS.quantity : 0,
+        totalAmount: firstAvailable ? firstAvailable.price * ORDER_DEFAULTS.quantity : 0,
         description: "",
       });
     } catch (err) {
@@ -161,6 +161,11 @@ export default function CreateOrderPage() {
     style: "currency",
     currency: CURRENCY.code,
   }).format(unitPrice);
+
+  const formattedZero = new Intl.NumberFormat(CURRENCY.locale, {
+    style: "currency",
+    currency: CURRENCY.code,
+  }).format(0);
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
@@ -256,7 +261,7 @@ export default function CreateOrderPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Tax</span>
-                  <span>₹0.00</span>
+                  <span>{formattedZero}</span>
                 </div>
               </div>
 

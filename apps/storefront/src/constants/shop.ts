@@ -19,7 +19,7 @@ export const SHOP = {
     { label: "Collections", to: ROUTES.shopCollections },
     { label: "New Arrivals", to: ROUTES.shopCollections },
     { label: "Essence", to: ROUTES.shopCollections },
-    { label: "Journal", to: ROUTES.shop },
+    { label: "Journal", to: ROUTES.journal },
   ],
 
   hero: {
@@ -29,13 +29,14 @@ export const SHOP = {
     body: "Exploring the intersection of atmospheric depth and precision minimalism. A collection designed for strategic clarity.",
     primaryCta: "Explore Collection",
     secondaryCta: "Watch Film",
-    floatingStatus: "Live Auction Status: Active",
+    floatingStatus: "Live Auction: Active",
   },
 
   featured: {
+    kicker: "Curated Selection",
     eyebrow: "Featured Arrivals",
     subtitle: "Precision crafted essentials for the visionary mind.",
-    viewAll: "View All Objects",
+    viewAll: "View Complete Archive",
     limit: 4,
   },
 
@@ -52,9 +53,10 @@ export const SHOP = {
   },
 
   newsletter: {
+    eyebrow: "Membership",
     title: `Join the ${APP.name} Circle.`,
     body: "Exclusive collection previews, strategic insights, and early access to archival releases.",
-    placeholder: "ENTER YOUR EMAIL",
+    placeholder: "Enter your email address",
     success: "You're on the list.",
   },
 
@@ -117,6 +119,43 @@ export const SHOP = {
     remove: "Remove",
   },
 
+  journal: {
+    eyebrow: "The Journal",
+    title: "Field Notes",
+    intro:
+      "Essays on precision minimalism, material studies, and the philosophy behind the Ordexa Ether system.",
+    readMore: "Read Essay",
+    entries: [
+      {
+        tag: "Philosophy",
+        date: "March 2024",
+        title: "The Architecture of Silence",
+        excerpt:
+          "How negative space and restraint became the foundation of the Essence collection.",
+        image:
+          "https://lh3.googleusercontent.com/aida-public/AB6AXuBEotWdYh5QNY3Q6fXlkuFk2HBRRVPO9aFAZf138BELh-WHBnh-phMIg0yRkomkNgwCaer0GY8pILQ_CCeR6r11IIr6wveQzC_BTbaa4oJok67m1epf7g9uEQbiBdiQ-WtSEavM0TPvob6W0ZXhCmIYb7Nc40FSoBU9khHUhRX3kd-9ruuFcfNarkU2rr7PbkT1ltHnzvHCyV1RwCoRpi9vJg2EBdSgzrRMVKKi_PT4prWgLw9WUwclFRCH2OJB9ho0C0BWmiqgCvE",
+      },
+      {
+        tag: "Materials",
+        date: "February 2024",
+        title: "Borosilicate & Light",
+        excerpt:
+          "A study of how the Series A shell refracts morning light into the workspace.",
+        image:
+          "https://lh3.googleusercontent.com/aida-public/AB6AXuCt1jtoP_kRIKgcWTEuKMW-CnipjRU83zlyIAtIgbLc5euYH03fZXG9X-eMZ1aVUUraTkXVCT6Lco6hGi7UPphtSUnHlYVS5FT_7xC4zFUpiQjFvppTrq2fPZyRH2BHRAY1OygjHe2rwPaqtyoO2iJ573yv986XjcJhaxVIQgzEdRanj58m7_mkB20K8ertK6HQlDGQUQ2jfN74JcZMOeiLRuQaR7yEAUc9vhfUEzcDFnl3d8jBlovH0GdTRntMggOAWnMwmW6BNR8",
+      },
+      {
+        tag: "Process",
+        date: "January 2024",
+        title: "Hand-glazing the Ether Vessel",
+        excerpt:
+          "Inside the studio where each iridescent vessel is finished by hand.",
+        image:
+          "https://lh3.googleusercontent.com/aida-public/AB6AXuD9Dp7uWztUNIWkAtLehqihdaNHcvkXt78PI5QEshRlubissJA6BdMfWQFQw0fy6Pg1rw8Sj-WoMWVpnz2fHdZZredvNAE4ji__X-ZViDpNMR9e8iGi6bfqIUBnWoK67qd9UT8WHk2UrdaOIbhhxba2OXupu7Qy2TazGmu7WAKWlaqrU_7snb7OX5S8P9QGGCI_4W-Zv7UvLvd-SXwDJaOa0MBw1Et4AUjImi6pxsB3mtULPwBVji57vi3ze2smMJb3TEVoSzcvGfk",
+      },
+    ],
+  },
+
   footer: {
     groups: [
       {
@@ -132,7 +171,7 @@ export const SHOP = {
         links: [
           { label: "Sustainability", to: ROUTES.shop },
           { label: "Contact", to: ROUTES.shop },
-          { label: "Journal", to: ROUTES.shop },
+          { label: "Journal", to: ROUTES.journal },
         ],
       },
       {

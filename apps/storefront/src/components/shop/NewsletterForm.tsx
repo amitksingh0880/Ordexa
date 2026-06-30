@@ -32,7 +32,7 @@ export function NewsletterForm({ className }: { className?: string }) {
           onChange={(event) => setEmail(event.target.value)}
           placeholder={SHOP.newsletter.placeholder}
           aria-label={SHOP.newsletter.placeholder}
-          className="h-auto rounded-none border-0 border-b border-line bg-transparent px-0 py-4 pr-10 font-body text-label uppercase tracking-[0.1em] shadow-none focus-visible:border-ink focus-visible:ring-0"
+          className="h-auto rounded-none border-0 border-b border-line bg-transparent px-0 py-4 pr-10 font-body text-lg shadow-none placeholder:text-ink-muted/70 focus-visible:border-ink focus-visible:ring-0"
         />
         <Button
           type="submit"

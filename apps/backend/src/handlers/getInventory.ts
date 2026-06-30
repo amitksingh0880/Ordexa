@@ -10,6 +10,8 @@ export const getInventoryHandler: Handler = async (_c, _req: Request, res: Respo
     const items = rows.map((i) => ({
       sku: i.sku,
       name: i.name,
+      price: i.price,
+      currency: i.currency,
       available: i.available,
       reserved: i.reserved,
     }));

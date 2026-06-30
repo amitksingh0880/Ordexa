@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowUpRight, Zap } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { Button } from "@ui/components/ui/button";
 import { NewsletterForm } from "../../components/shop/NewsletterForm";
 import { ProductGrid } from "../../components/shop/ProductGrid";
@@ -14,57 +14,65 @@ export default function ShopHomePage() {
 
   return (
     <>
-      <section className="relative flex min-h-[88vh] items-center justify-center overflow-hidden px-6 md:px-10">
-        <div className="relative z-10 max-w-[1728px] text-center">
-          <div className="glass mb-8 inline-block rounded-full border border-ink/20 px-4 py-1">
-            <span className="font-body text-label uppercase tracking-[0.2em] text-ink">
+      <section className="group relative mx-auto flex h-screen max-w-[1800px] flex-col justify-center overflow-hidden px-6 pt-20 md:px-12">
+        <div
+          aria-hidden
+          className="hero-dots pointer-events-none absolute inset-0 transition-transform duration-700 group-hover:scale-125"
+        />
+        <div className="relative z-10 max-w-5xl">
+          <div className="fade-in-up mb-6 inline-block">
+            <span className="border-b border-line pb-1 font-body text-label uppercase tracking-[0.2em] text-ink-soft">
               {hero.eyebrow}
             </span>
           </div>
-          <h1 className="select-none font-display text-headline-sm uppercase leading-none text-ink md:text-display">
+          <h1 className="fade-in-up delay-100 select-none font-display text-headline-sm uppercase leading-none text-ink md:text-display">
             {hero.titleTop}
             <br />
-            <span className="text-outline italic">{hero.titleBottom}</span>
+            <span className="text-outline font-light italic">{hero.titleBottom}</span>
           </h1>
-          <p className="mx-auto mt-8 max-w-2xl font-body text-body-lg text-ink-soft">
+          <p className="fade-in-up delay-200 mt-8 max-w-xl font-body text-body-lg font-light text-ink-soft">
             {hero.body}
           </p>
-          <div className="mt-12 flex flex-col justify-center gap-4 md:flex-row">
+          <div className="fade-in-up delay-300 mt-12 flex flex-col gap-4 sm:flex-row">
             <Button
               asChild
-              className="rounded-full bg-ink px-12 py-6 font-body text-label uppercase tracking-[0.15em] text-white hover:bg-ink/90"
+              className="rounded-none bg-ink px-10 py-6 font-body text-label uppercase tracking-[0.2em] text-white hover:bg-ink/80"
             >
               <Link to={ROUTES.shopCollections}>{hero.primaryCta}</Link>
             </Button>
             <Button
               variant="outline"
-              className="rounded-full border-ink px-12 py-6 font-body text-label uppercase tracking-[0.15em] text-ink hover:bg-ink hover:text-white"
+              className="rounded-none border-line px-10 py-6 font-body text-label uppercase tracking-[0.2em] text-ink hover:border-ink hover:bg-transparent"
             >
               {hero.secondaryCta}
             </Button>
           </div>
         </div>
-        <div className="glass absolute bottom-10 left-10 hidden items-center gap-2 rounded-2xl p-6 shadow-xl lg:flex">
-          <Zap className="size-5 fill-ink text-ink" />
-          <span className="font-body text-label uppercase tracking-[0.1em] text-ink">
+        <div className="fade-in-up delay-400 absolute bottom-12 right-6 hidden items-center gap-3 border border-line bg-surface-container px-4 py-3 lg:flex">
+          <span className="size-2 animate-pulse rounded-full bg-ink" />
+          <span className="font-body text-label uppercase tracking-[0.15em] text-ink">
             {hero.floatingStatus}
           </span>
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1728px] px-6 py-24 md:px-10">
-        <div className="mb-12 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
-          <div>
-            <h2 className="font-display text-headline-sm text-ink md:text-headline">
+      <div className="mx-auto max-w-[1800px] px-6 md:px-12">
+        <hr className="border-t border-line/60" />
+      </div>
+
+      <section className="mx-auto max-w-[1800px] px-6 py-28 md:px-12">
+        <div className="mb-16 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
+          <div className="max-w-xl">
+            <span className="mb-4 block font-body text-label uppercase tracking-[0.15em] text-ink-soft">
+              {SHOP.featured.kicker}
+            </span>
+            <h2 className="font-display text-4xl tracking-tight text-ink md:text-6xl">
               {SHOP.featured.eyebrow}
             </h2>
-            <p className="mt-2 max-w-md font-body text-body-lg text-ink-soft">
-              {SHOP.featured.subtitle}
-            </p>
           </div>
           <Link
             to={ROUTES.shopCollections}
-            className="border-b border-ink pb-1 font-body text-label uppercase tracking-[0.1em] text-ink"
+            className="border-b border-ink pb-1 font-body text-label uppercase tracking-[0.15em] text-ink transition-colors hover:border-ink-soft hover:text-ink-soft"
           >
             {SHOP.featured.viewAll}
           </Link>
@@ -74,43 +82,46 @@ export default function ShopHomePage() {
           isLoading={isLoading}
           skeletonCount={SHOP.featured.limit}
           emptyMessage={SHOP.collectionsPage.emptyState}
-          className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+          className="grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-4"
         />
       </section>
 
-      <section className="overflow-hidden bg-ink py-24 text-white">
-        <div className="mx-auto grid max-w-[1728px] grid-cols-1 items-center gap-16 px-6 md:px-10 lg:grid-cols-12">
-          <div className="flex flex-col gap-8 lg:col-span-5">
-            <span className="font-body text-label uppercase tracking-[0.3em] text-ink-muted">
-              {editorial.eyebrow}
-            </span>
-            <h2 className="font-display text-headline-sm leading-tight md:text-headline">
-              {editorial.title}
-            </h2>
-            <p className="font-body text-body-lg leading-relaxed text-white/70">
+      <section className="relative overflow-hidden bg-ink py-28 text-white">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(64,64,64,0.4),_transparent_60%)]" />
+        <div className="relative z-10 mx-auto grid max-w-[1800px] grid-cols-1 items-center gap-y-16 px-6 md:px-12 lg:grid-cols-12 lg:gap-x-24">
+          <div className="flex flex-col gap-10 lg:col-span-5">
+            <div>
+              <span className="mb-6 block font-body text-label uppercase tracking-[0.3em] text-white/50">
+                {editorial.eyebrow}
+              </span>
+              <h2 className="font-display text-5xl font-medium leading-[1.1] tracking-tight text-white md:text-7xl">
+                {editorial.title}
+              </h2>
+            </div>
+            <p className="font-body text-xl font-light leading-relaxed text-white/70">
               {editorial.body}
             </p>
-            <button
-              type="button"
-              className="group flex items-center gap-3 self-start"
-            >
-              <span className="border-b border-white pb-1 font-body text-label uppercase tracking-[0.15em] transition-all group-hover:pr-2">
+            <button type="button" className="group flex items-center gap-4 self-start text-white">
+              <span className="border-b border-white/30 pb-1 font-body text-label uppercase tracking-[0.15em] transition-colors group-hover:border-white">
                 {editorial.cta}
               </span>
-              <ArrowUpRight className="size-4" />
+              <ArrowUpRight className="size-4 transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
             </button>
           </div>
           <div className="relative lg:col-span-7">
-            <div className="aspect-video overflow-hidden rounded-3xl shadow-2xl">
+            <div className="aspect-[4/3] overflow-hidden bg-neutral-900">
               <img
                 src={editorial.image}
                 alt={editorial.title}
-                className="h-full w-full object-cover grayscale transition-all duration-1000 hover:grayscale-0"
+                className="h-full w-full object-cover opacity-80 mix-blend-luminosity transition-all duration-700 hover:opacity-100 hover:mix-blend-normal"
               />
             </div>
-            <div className="glass absolute -bottom-8 -left-8 hidden max-w-xs rounded-2xl p-6 md:block">
-              <p className="font-body text-sm italic text-ink">{editorial.quote}</p>
-              <p className="mt-3 font-body text-label uppercase tracking-[0.1em] text-ink">
+            <div className="dark-glass absolute -bottom-8 -left-8 hidden max-w-sm p-10 md:block">
+              <p className="font-body text-lg font-light leading-relaxed text-white/90">
+                {editorial.quote}
+              </p>
+              <div className="my-6 h-px w-8 bg-white/30" />
+              <p className="font-body text-label uppercase tracking-[0.15em] text-white/50">
                 {editorial.quoteAuthor}
               </p>
             </div>
@@ -118,11 +129,16 @@ export default function ShopHomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1728px] px-6 py-24 md:px-10">
-        <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
-          <h3 className="mb-8 font-display text-h2 text-ink">{newsletter.title}</h3>
-          <p className="mb-12 font-body text-sm text-ink-soft">{newsletter.body}</p>
-          <NewsletterForm className="max-w-xl" />
+      <section className="mx-auto max-w-[1800px] bg-surface px-6 py-28 md:px-12">
+        <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+          <span className="mb-6 block font-body text-label uppercase tracking-[0.15em] text-ink-soft">
+            {newsletter.eyebrow}
+          </span>
+          <h3 className="mb-6 font-display text-4xl font-medium tracking-tight text-ink md:text-5xl">
+            {newsletter.title}
+          </h3>
+          <p className="mb-12 font-body text-lg font-light text-ink-soft">{newsletter.body}</p>
+          <NewsletterForm className="max-w-md" />
         </div>
       </section>
     </>

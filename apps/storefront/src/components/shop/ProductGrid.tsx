@@ -22,10 +22,10 @@ export function ProductGrid({
     return (
       <div className={cn("grid gap-6", className)}>
         {Array.from({ length: skeletonCount }).map((_, index) => (
-          <div key={index} className="flex flex-col gap-3">
-            <Skeleton className="aspect-[4/5] w-full rounded-2xl bg-soft" />
-            <Skeleton className="h-4 w-2/3 bg-soft" />
-            <Skeleton className="h-3 w-1/3 bg-soft" />
+          <div key={index} className="flex flex-col gap-4">
+            <Skeleton className="aspect-[3/4] w-full rounded-none bg-surface-container" />
+            <Skeleton className="h-4 w-2/3 rounded-none bg-surface-container" />
+            <Skeleton className="h-3 w-1/3 rounded-none bg-surface-container" />
           </div>
         ))}
       </div>

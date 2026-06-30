@@ -3,6 +3,8 @@
 export interface InventoryItem {
   sku: string;
   name: string;
+  price: number;
+  currency: string;
   available: number;
   reserved: number;
 }

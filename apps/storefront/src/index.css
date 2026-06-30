@@ -128,62 +128,69 @@
 /* Storefront ("Ordexa Ether") design tokens — namespaced to avoid clashing with
    the shadcn semantic palette above. */
 @theme {
-  --color-ink: #000000;
+  --color-ink: #0a0a0a;
   --color-ink-soft: #5e5f5c;
-  --color-ink-muted: #8c8880;
-  --color-page: #faf9f5;
+  --color-ink-muted: #8a8a86;
+  --color-page: #f9f8f5;
   --color-panel: #f0efeb;
-  --color-soft: #e9e8e4;
-  --color-line: #d9d7d0;
-  --color-surface: #fdf8f8;
-  --color-surface-low: #f7f3f2;
-  --color-surface-container: #f1edec;
+  --color-soft: #f0efeb;
+  --color-line: #e6e5e0;
+  --color-surface: #faf9f6;
+  --color-surface-low: #f7f6f3;
+  --color-surface-container: #f2f1ed;
   --color-flare: #ff4b2b;
   --color-flare-deep: #f24223;
 
   --font-display: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-body: "Work Sans", ui-sans-serif, system-ui, sans-serif;
 
-  --text-display: 120px;
-  --text-display--line-height: 0.9;
-  --text-display--letter-spacing: -0.05em;
-  --text-display--font-weight: 700;
+  --text-display: 140px;
+  --text-display--line-height: 0.85;
+  --text-display--letter-spacing: -0.06em;
+  --text-display--font-weight: 600;
 
-  --text-headline: 82px;
-  --text-headline--line-height: 1.05;
-  --text-headline--letter-spacing: -0.04em;
-  --text-headline--font-weight: 700;
+  --text-headline: 96px;
+  --text-headline--line-height: 0.95;
+  --text-headline--letter-spacing: -0.05em;
+  --text-headline--font-weight: 600;
 
-  --text-headline-sm: 48px;
-  --text-headline-sm--line-height: 1.1;
-  --text-headline-sm--letter-spacing: -0.03em;
-  --text-headline-sm--font-weight: 700;
+  --text-headline-sm: 56px;
+  --text-headline-sm--line-height: 1;
+  --text-headline-sm--letter-spacing: -0.04em;
+  --text-headline-sm--font-weight: 600;
 
-  --text-h2: 32px;
-  --text-h2--line-height: 1.2;
-  --text-h2--letter-spacing: -0.02em;
-  --text-h2--font-weight: 600;
+  --text-h2: 36px;
+  --text-h2--line-height: 1.1;
+  --text-h2--letter-spacing: -0.03em;
+  --text-h2--font-weight: 500;
 
   --text-body-lg: 18px;
-  --text-body-lg--line-height: 1.6;
+  --text-body-lg--line-height: 1.7;
+  --text-body-lg--letter-spacing: -0.01em;
 
-  --text-label: 10px;
+  --text-label: 11px;
   --text-label--line-height: 1;
-  --text-label--letter-spacing: 0.1em;
-  --text-label--font-weight: 700;
+  --text-label--letter-spacing: 0.15em;
+  --text-label--font-weight: 500;
 }
 
 @layer utilities {
   .glass {
-    background: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(32px);
-    -webkit-backdrop-filter: blur(32px);
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
   }
   .glass-panel {
-    background: rgba(250, 249, 245, 0.6);
-    backdrop-filter: blur(32px);
-    -webkit-backdrop-filter: blur(32px);
+    background: rgba(250, 249, 245, 0.7);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+  .dark-glass {
+    background: rgba(10, 10, 10, 0.4);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
   .text-outline {
     -webkit-text-stroke: 1px currentColor;
@@ -196,4 +203,35 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+  .fade-in-up {
+    animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  .hero-dots {
+    background-image: radial-gradient(circle, rgba(10, 10, 10, 0.16) 1.3px, transparent 1.3px);
+    background-size: 30px 30px;
+    animation: heroDots 9s ease-in-out infinite;
+    transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, background-size, background-position;
+    -webkit-mask-image: radial-gradient(ellipse at center, #000 35%, transparent 78%);
+    mask-image: radial-gradient(ellipse at center, #000 35%, transparent 78%);
+  }
+  .delay-100 { animation-delay: 100ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-400 { animation-delay: 400ms; }
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroDots {
+  0%   { background-size: 28px 28px; background-position: 0 0; }
+  50%  { background-size: 38px 38px; background-position: 10px -10px; }
+  100% { background-size: 28px 28px; background-position: 0 0; }
 }

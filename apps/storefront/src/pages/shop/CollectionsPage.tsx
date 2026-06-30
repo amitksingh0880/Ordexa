@@ -60,24 +60,24 @@ export default function CollectionsPage() {
   return (
     <>
       <section className="mx-auto max-w-[1728px] px-6 pb-16 pt-16 md:px-10">
-        <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-end">
+        <div className="flex flex-col items-start justify-between gap-8 border-b border-line/40 pb-12 md:flex-row md:items-end">
           <div className="max-w-2xl">
             <span className="mb-4 block font-body text-label uppercase tracking-[0.2em] text-ink-muted">
               {header?.tagline ?? " "}
             </span>
             {header ? (
-              <h1 className="font-display text-headline-sm text-ink md:text-headline">
+              <h1 className="font-display text-headline-sm font-light tracking-tight text-ink md:text-headline">
                 {header.name}
               </h1>
             ) : (
-              <Skeleton className="h-16 w-72 bg-soft" />
+              <Skeleton className="h-16 w-72 rounded-none bg-surface-container" />
             )}
-            <p className="mt-6 max-w-xl font-body text-body-lg text-ink-soft">
+            <p className="mt-6 max-w-xl font-body text-body-lg font-light text-ink-soft">
               {header?.description ?? ""}
             </p>
           </div>
           <Select value={sort} onValueChange={setSort}>
-            <SelectTrigger className="rounded-full border-line bg-transparent font-body text-label uppercase tracking-[0.1em]">
+            <SelectTrigger className="rounded-none border-0 border-b border-ink bg-transparent font-body text-label uppercase tracking-[0.1em]">
               <SelectValue placeholder={SHOP.collectionsPage.sortLabel} />
             </SelectTrigger>
             <SelectContent>
@@ -150,7 +150,7 @@ export default function CollectionsPage() {
 
           <Separator className="bg-line/40" />
 
-          <div className="rounded-2xl bg-soft p-6">
+          <div className="border border-line/40 p-6 transition-colors hover:border-ink/30">
             <h4 className="mb-2 font-body text-sm font-semibold text-ink">
               {SHOP.collectionsPage.curation.title}
             </h4>
@@ -181,10 +181,10 @@ export default function CollectionsPage() {
       <section className="bg-surface-low py-24">
         <div className="mx-auto grid max-w-[1728px] grid-cols-1 items-center gap-16 px-6 md:grid-cols-2 md:px-10">
           <div>
-            <h2 className="mb-8 font-display text-h2 text-ink">
+            <h2 className="mb-8 font-display text-h2 font-light text-ink">
               {SHOP.collectionsPage.informedTitle}
             </h2>
-            <p className="max-w-sm font-body text-sm text-ink-soft">
+            <p className="max-w-sm font-body text-sm font-light text-ink-soft">
               {SHOP.collectionsPage.informedBody}
             </p>
           </div>

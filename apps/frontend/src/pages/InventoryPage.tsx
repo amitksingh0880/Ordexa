@@ -4,7 +4,8 @@ import { Package, ShieldAlert, Boxes, Coins, CircleCheck } from "lucide-react";
 
 import { getInventory } from "@/lib/api-client";
 import type { InventoryItem } from "@/types/domain";
-import { STOCK, type BadgeVariant, PRODUCT_PRICES, CURRENCY } from "@/constants/app";
+import { STOCK, type BadgeVariant } from "@/constants/app";
+import { formatCurrency } from "@/lib/format";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@ui/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@ui/components/ui/table";
 import { Badge } from "@ui/components/ui/badge";
@@ -42,14 +43,6 @@ export default function InventoryPage() {
       .catch(() => toast.error("Failed to load inventory"))
       .finally(() => setLoading(false));
   }, []);
-
-  const formatPrice = (sku: string) => {
-    const price = PRODUCT_PRICES[sku] ?? 0;
-    return new Intl.NumberFormat(CURRENCY.locale, {
-      style: "currency",
-      currency: CURRENCY.code,
-    }).format(price);
-  };
 
   return (
     <div className="space-y-6">
@@ -99,7 +92,7 @@ export default function InventoryPage() {
                         <TableCell className="font-medium text-foreground">{item.name}</TableCell>
                         <TableCell className="text-right font-semibold text-foreground flex items-center justify-end gap-1.5 h-12">
                           <Coins className="h-3.5 w-3.5 text-muted-foreground" />
-                          {formatPrice(item.sku)}
+                          {formatCurrency(item.price)}
                         </TableCell>
                         <TableCell className="text-right font-mono font-medium text-foreground">{item.available}</TableCell>
                         <TableCell className="text-right font-mono text-muted-foreground">{item.reserved}</TableCell>

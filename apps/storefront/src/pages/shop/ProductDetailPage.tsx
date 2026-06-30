@@ -74,14 +74,14 @@ export default function ProductDetailPage({ productId }: { productId: string }) 
     <div className="mx-auto max-w-[1728px] px-6 pb-24 pt-8 md:px-10">
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
         <div className="space-y-6 lg:col-span-7">
-          <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-soft">
+          <div className="group relative aspect-[4/5] overflow-hidden bg-surface-container">
             <img
               src={gallery[0]}
               alt={product.name}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover transition-transform duration-[1.5s] group-hover:scale-105"
             />
             {product.badge ? (
-              <Badge className="glass absolute right-4 top-4 rounded-full border border-white/40 px-4 py-1 font-body text-label uppercase tracking-[0.1em] text-ink">
+              <Badge className="absolute right-4 top-4 rounded-none border-0 bg-white/90 px-4 py-1.5 font-body text-label uppercase tracking-[0.15em] text-ink backdrop-blur-sm">
                 {product.badge}
               </Badge>
             ) : null}
@@ -91,7 +91,7 @@ export default function ProductDetailPage({ productId }: { productId: string }) 
               {gallery.slice(1, 3).map((src, index) => (
                 <div
                   key={index}
-                  className="aspect-square overflow-hidden rounded-2xl bg-soft"
+                  className="aspect-square overflow-hidden bg-surface-container"
                 >
                   <img
                     src={src}
@@ -109,14 +109,16 @@ export default function ProductDetailPage({ productId }: { productId: string }) 
             <h2 className="font-body text-label uppercase tracking-[0.2em] text-ink-muted">
               {product.series}
             </h2>
-            <h1 className="font-display text-headline-sm leading-tight tracking-tighter text-ink md:text-headline">
+            <h1 className="font-display text-headline-sm font-light leading-[1] tracking-tighter text-ink md:text-6xl">
               {product.name}
             </h1>
           </div>
-          <p className="font-body text-body-lg text-ink-soft">{product.description}</p>
+          <p className="font-body text-body-lg font-light leading-relaxed text-ink-soft">
+            {product.description}
+          </p>
 
           <div className="flex items-center justify-between border-y border-line/30 py-6">
-            <span className="font-display text-h2 font-bold text-ink">
+            <span className="font-display text-3xl font-medium text-ink">
               {formatPrice(product.price, product.currency)}
             </span>
             <Stars rating={product.rating} reviews={product.reviews} />
@@ -124,7 +126,7 @@ export default function ProductDetailPage({ productId }: { productId: string }) 
 
           {product.finishes.length > 0 ? (
             <div className="space-y-4">
-              <span className="font-body text-label uppercase tracking-[0.1em] text-ink-muted">
+              <span className="font-body text-label uppercase tracking-[0.15em] text-ink">
                 {SHOP.product.chooseFinish}
               </span>
               <div className="flex gap-3">
@@ -136,10 +138,10 @@ export default function ProductDetailPage({ productId }: { productId: string }) 
                     aria-label={option}
                     aria-pressed={finish === option}
                     className={cn(
-                      "size-10 rounded-full border border-line ring-offset-2 transition-all ring-offset-page",
+                      "size-12 rounded-full border border-line ring-offset-4 transition-all ring-offset-page",
                       finish === option
-                        ? "ring-2 ring-ink"
-                        : "ring-0 hover:ring-2 hover:ring-line",
+                        ? "ring-1 ring-ink"
+                        : "ring-0 hover:ring-1 hover:ring-line",
                     )}
                     style={{ backgroundColor: option }}
                   />
@@ -151,23 +153,26 @@ export default function ProductDetailPage({ productId }: { productId: string }) 
           <div className="flex flex-col gap-4 pt-2">
             <Button
               onClick={handleAddToBag}
-              className="w-full rounded-full bg-ink py-6 font-body text-label uppercase tracking-[0.15em] text-white hover:bg-ink/90"
+              className="w-full rounded-none bg-ink py-7 font-body text-label uppercase tracking-[0.2em] text-white hover:bg-ink/80"
             >
               {SHOP.product.addToBag}
             </Button>
             <Button
               variant="outline"
-              className="w-full rounded-full border-ink/30 py-6 font-body text-label uppercase tracking-[0.15em] text-ink hover:bg-ink hover:text-white"
+              className="w-full rounded-none border-line py-7 font-body text-label uppercase tracking-[0.2em] text-ink hover:border-ink hover:bg-transparent"
             >
               {SHOP.product.findInStore}
             </Button>
           </div>
 
-          <div className="flex flex-wrap gap-8 pt-4">
+          <div className="grid grid-cols-3 gap-4 pt-4">
             {SHOP.product.trustMarkers.map((marker) => {
               const Icon = TRUST_ICONS[marker.icon];
               return (
-                <div key={marker.label} className="flex items-center gap-2">
+                <div
+                  key={marker.label}
+                  className="flex flex-col items-center gap-2 bg-surface-low p-4 text-center"
+                >
                   {Icon ? <Icon className="size-5 text-ink-soft" /> : null}
                   <span className="font-body text-[9px] uppercase tracking-[0.1em] text-ink-soft">
                     {marker.label}
@@ -189,21 +194,23 @@ export default function ProductDetailPage({ productId }: { productId: string }) 
               <Card
                 key={spec.label}
                 className={cn(
-                  "flex h-44 flex-col justify-between rounded-2xl border-0 p-8 shadow-none",
-                  index === 1 ? "bg-ink text-white" : "bg-soft text-ink",
+                  "flex h-52 flex-col justify-between rounded-none border p-8 shadow-none transition-transform duration-500 hover:-translate-y-2",
+                  index === 1
+                    ? "border-ink bg-ink text-white"
+                    : "border-line/40 bg-surface text-ink",
                 )}
               >
-                <span className="font-body text-label uppercase tracking-[0.1em] opacity-60">
+                <span className="font-body text-label uppercase tracking-[0.15em] opacity-60">
                   {spec.label}
                 </span>
-                <h3 className="font-display text-h2 font-bold">{spec.value}</h3>
+                <h3 className="font-display text-h2 font-medium">{spec.value}</h3>
               </Card>
             ))}
           </div>
         </section>
       ) : null}
 
-      <section className="relative mt-24 h-[600px] overflow-hidden rounded-3xl">
+      <section className="relative mt-32 h-[600px] overflow-hidden">
         <img
           src={gallery[gallery.length - 1]}
           alt={product.name}
@@ -211,14 +218,14 @@ export default function ProductDetailPage({ productId }: { productId: string }) 
         />
         <div className="absolute inset-0 bg-ink/20 backdrop-blur-[2px]" />
         <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
-          <div className="glass max-w-3xl rounded-3xl p-12">
-            <h2 className="mb-8 font-display text-h2 text-ink md:text-headline-sm">
+          <div className="glass max-w-3xl p-12">
+            <h2 className="mb-8 font-display text-h2 font-medium text-ink md:text-headline-sm">
               {SHOP.product.showcase.title}
             </h2>
-            <p className="mb-12 font-body text-body-lg text-ink-soft">
+            <p className="mb-12 font-body text-body-lg font-light text-ink-soft">
               {SHOP.product.showcase.body}
             </p>
-            <Button className="rounded-full bg-ink px-8 py-5 font-body text-label uppercase tracking-[0.15em] text-white hover:bg-ink/90">
+            <Button className="rounded-none bg-ink px-10 py-6 font-body text-label uppercase tracking-[0.2em] text-white hover:bg-ink/80">
               {SHOP.product.showcase.cta}
             </Button>
           </div>

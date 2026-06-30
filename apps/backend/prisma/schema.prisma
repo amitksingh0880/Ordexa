@@ -33,6 +33,8 @@ model Inventory {
   id        String   @id @default(uuid()) @map("_id")
   sku       String   @unique
   name      String
+  price     Float    @default(0)
+  currency  String   @default("USD")
   available Int      @default(0)
   reserved  Int      @default(0)
   createdAt DateTime @default(now())

@@ -4,7 +4,7 @@ import { Boxes, PackageCheck, Layers, Plus, TrendingUp, DollarSign, ShoppingBag,
 
 import { getInventory } from "@/lib/api-client";
 import type { InventoryItem } from "@/types/domain";
-import { APP, ROUTES, PRODUCT_PRICES, CURRENCY } from "@/constants/app";
+import { APP, ROUTES, CURRENCY } from "@/constants/app";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@ui/components/ui/card";
 import { Button } from "@ui/components/ui/button";
 import { Skeleton } from "@ui/components/ui/skeleton";
@@ -23,11 +23,8 @@ export default function DashboardPage() {
   const totalAvailable = items?.reduce((sum, i) => sum + i.available, 0) ?? 0;
   const totalReserved = items?.reduce((sum, i) => sum + i.reserved, 0) ?? 0;
 
-  // Calculate mock value based on prices in constants
-  const totalValue = items?.reduce((sum, i) => {
-    const price = PRODUCT_PRICES[i.sku] ?? 0;
-    return sum + (i.available * price);
-  }, 0) ?? 0;
+  // Catalog value: available units valued at each item's own price.
+  const totalValue = items?.reduce((sum, i) => sum + i.available * i.price, 0) ?? 0;
 
   const formattedTotalValue = new Intl.NumberFormat(CURRENCY.locale, {
     style: "currency",

@@ -8,6 +8,7 @@ export const ROUTES = {
   shopCollections: "/collections",
   shopProductPattern: "/products/$productId",
   shopProduct: (slug: string) => `/products/${slug}`,
+  journal: "/journal",
 } as const;
 
 export const API = {
