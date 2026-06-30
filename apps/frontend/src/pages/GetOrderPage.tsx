@@ -6,10 +6,10 @@ import { getOrdersByUser } from "@/lib/api-client";
 import type { Order } from "@/types/domain";
 import { ORDER_STATUS_VARIANT, ORDER_STATUS, CURRENCY } from "@/constants/app";
 import { formatDateTime } from "@/lib/format";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@ui/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@ui/components/ui/table";
+import { Badge } from "@ui/components/ui/badge";
+import { Skeleton } from "@ui/components/ui/skeleton";
 
 type UserOrdersPageProps = {
   userId: string;

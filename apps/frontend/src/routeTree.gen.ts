@@ -9,20 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ShopRouteImport } from './routes/shop'
 import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ShopIndexRouteImport } from './routes/shop/index'
-import { Route as ShopCollectionsRouteImport } from './routes/shop/collections'
 import { Route as OrdersCreateRouteImport } from './routes/orders/create'
 import { Route as OrdersOrderIdRouteImport } from './routes/orders/$orderId'
-import { Route as ShopProductsProductIdRouteImport } from './routes/shop/products.$productId'
 
-const ShopRoute = ShopRouteImport.update({
-  id: '/shop',
-  path: '/shop',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const InventoryRoute = InventoryRouteImport.update({
   id: '/inventory',
   path: '/inventory',
@@ -32,16 +23,6 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as any)
-const ShopIndexRoute = ShopIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => ShopRoute,
-} as any)
-const ShopCollectionsRoute = ShopCollectionsRouteImport.update({
-  id: '/collections',
-  path: '/collections',
-  getParentRoute: () => ShopRoute,
 } as any)
 const OrdersCreateRoute = OrdersCreateRouteImport.update({
   id: '/orders/create',
@@ -53,91 +34,43 @@ const OrdersOrderIdRoute = OrdersOrderIdRouteImport.update({
   path: '/orders/$orderId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ShopProductsProductIdRoute = ShopProductsProductIdRouteImport.update({
-  id: '/products/$productId',
-  path: '/products/$productId',
-  getParentRoute: () => ShopRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/inventory': typeof InventoryRoute
-  '/shop': typeof ShopRouteWithChildren
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/orders/create': typeof OrdersCreateRoute
-  '/shop/collections': typeof ShopCollectionsRoute
-  '/shop/': typeof ShopIndexRoute
-  '/shop/products/$productId': typeof ShopProductsProductIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/inventory': typeof InventoryRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/orders/create': typeof OrdersCreateRoute
-  '/shop/collections': typeof ShopCollectionsRoute
-  '/shop': typeof ShopIndexRoute
-  '/shop/products/$productId': typeof ShopProductsProductIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/inventory': typeof InventoryRoute
-  '/shop': typeof ShopRouteWithChildren
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/orders/create': typeof OrdersCreateRoute
-  '/shop/collections': typeof ShopCollectionsRoute
-  '/shop/': typeof ShopIndexRoute
-  '/shop/products/$productId': typeof ShopProductsProductIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/inventory'
-    | '/shop'
-    | '/orders/$orderId'
-    | '/orders/create'
-    | '/shop/collections'
-    | '/shop/'
-    | '/shop/products/$productId'
+  fullPaths: '/' | '/inventory' | '/orders/$orderId' | '/orders/create'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/inventory'
-    | '/orders/$orderId'
-    | '/orders/create'
-    | '/shop/collections'
-    | '/shop'
-    | '/shop/products/$productId'
-  id:
-    | '__root__'
-    | '/'
-    | '/inventory'
-    | '/shop'
-    | '/orders/$orderId'
-    | '/orders/create'
-    | '/shop/collections'
-    | '/shop/'
-    | '/shop/products/$productId'
+  to: '/' | '/inventory' | '/orders/$orderId' | '/orders/create'
+  id: '__root__' | '/' | '/inventory' | '/orders/$orderId' | '/orders/create'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   InventoryRoute: typeof InventoryRoute
-  ShopRoute: typeof ShopRouteWithChildren
   OrdersOrderIdRoute: typeof OrdersOrderIdRoute
   OrdersCreateRoute: typeof OrdersCreateRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/shop': {
-      id: '/shop'
-      path: '/shop'
-      fullPath: '/shop'
-      preLoaderRoute: typeof ShopRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/inventory': {
       id: '/inventory'
       path: '/inventory'
@@ -151,20 +84,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/shop/': {
-      id: '/shop/'
-      path: '/'
-      fullPath: '/shop/'
-      preLoaderRoute: typeof ShopIndexRouteImport
-      parentRoute: typeof ShopRoute
-    }
-    '/shop/collections': {
-      id: '/shop/collections'
-      path: '/collections'
-      fullPath: '/shop/collections'
-      preLoaderRoute: typeof ShopCollectionsRouteImport
-      parentRoute: typeof ShopRoute
     }
     '/orders/create': {
       id: '/orders/create'
@@ -180,34 +99,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrdersOrderIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/shop/products/$productId': {
-      id: '/shop/products/$productId'
-      path: '/products/$productId'
-      fullPath: '/shop/products/$productId'
-      preLoaderRoute: typeof ShopProductsProductIdRouteImport
-      parentRoute: typeof ShopRoute
-    }
   }
 }
-
-interface ShopRouteChildren {
-  ShopCollectionsRoute: typeof ShopCollectionsRoute
-  ShopIndexRoute: typeof ShopIndexRoute
-  ShopProductsProductIdRoute: typeof ShopProductsProductIdRoute
-}
-
-const ShopRouteChildren: ShopRouteChildren = {
-  ShopCollectionsRoute: ShopCollectionsRoute,
-  ShopIndexRoute: ShopIndexRoute,
-  ShopProductsProductIdRoute: ShopProductsProductIdRoute,
-}
-
-const ShopRouteWithChildren = ShopRoute._addFileChildren(ShopRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   InventoryRoute: InventoryRoute,
-  ShopRoute: ShopRouteWithChildren,
   OrdersOrderIdRoute: OrdersOrderIdRoute,
   OrdersCreateRoute: OrdersCreateRoute,
 }

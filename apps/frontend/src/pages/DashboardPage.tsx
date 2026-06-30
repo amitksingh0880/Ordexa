@@ -5,10 +5,10 @@ import { Boxes, PackageCheck, Layers, Plus, TrendingUp, DollarSign, ShoppingBag,
 import { getInventory } from "@/lib/api-client";
 import type { InventoryItem } from "@/types/domain";
 import { APP, ROUTES, PRODUCT_PRICES, CURRENCY } from "@/constants/app";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@ui/components/ui/card";
+import { Button } from "@ui/components/ui/button";
+import { Skeleton } from "@ui/components/ui/skeleton";
+import { Badge } from "@ui/components/ui/badge";
 
 export default function DashboardPage() {
   const [items, setItems] = useState<InventoryItem[] | null>(null);

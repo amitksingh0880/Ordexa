@@ -8,11 +8,11 @@ import { RefreshCw, ShoppingBag, Truck, Info, CreditCard, ShieldCheck } from "lu
 import { createOrder, getInventory } from "@/lib/api-client";
 import type { InventoryItem } from "@/types/domain";
 import { ORDER_DEFAULTS, PRODUCT_PRICES, CURRENCY } from "@/constants/app";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { AutoForm, type FieldConfig } from "@/components/ui/auto-form";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@ui/components/ui/card";
+import { Button } from "@ui/components/ui/button";
+import { AutoForm, type FieldConfig } from "@ui/components/ui/auto-form";
+import { Badge } from "@ui/components/ui/badge";
+import { Separator } from "@ui/components/ui/separator";
 
 // Schema for validating the order form
 const orderSchema = z.object({

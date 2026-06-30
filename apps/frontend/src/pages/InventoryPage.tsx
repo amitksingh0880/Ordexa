@@ -5,10 +5,10 @@ import { Package, ShieldAlert, Boxes, Coins, CircleCheck } from "lucide-react";
 import { getInventory } from "@/lib/api-client";
 import type { InventoryItem } from "@/types/domain";
 import { STOCK, type BadgeVariant, PRODUCT_PRICES, CURRENCY } from "@/constants/app";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@ui/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@ui/components/ui/table";
+import { Badge } from "@ui/components/ui/badge";
+import { Skeleton } from "@ui/components/ui/skeleton";
 
 function stockBadge(available: number): { label: string; variant: BadgeVariant; icon: React.ReactNode } {
   if (available <= 0) {
