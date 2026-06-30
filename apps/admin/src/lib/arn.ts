@@ -8,8 +8,8 @@ const arnMatches = (permission: string, required: string): boolean =>
 
 const tenantOf = (permissions: string[]): string | null => {
   for (const p of permissions) {
-    const parts = p.split(":");
-    if (parts.length >= 3 && parts[2] !== ARN.wildcard) return parts[2];
+    const segment = p.split(":")[2];
+    if (segment && segment !== ARN.wildcard) return segment;
   }
   return null;
 };

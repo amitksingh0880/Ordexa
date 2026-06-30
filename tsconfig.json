@@ -1,29 +1,17 @@
 {
-  "compilerOptions": {
-    // Environment setup & latest features
-   "lib": ["DOM", "ESNext"],
-    "target": "ESNext",
-    "module": "Preserve",
-    "moduleDetection": "force",
-    "jsx": "react-jsx",
-    "allowJs": true,
-
-    // Bundler mode
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "noEmit": true,
-
-    // Best practices
-    "strict": true,
-    "skipLibCheck": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-
-    // Some stricter flags (disabled by default)
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false
-  }
+  // Solution-style root: it compiles nothing itself and only points the editor
+  // at each project's own tsconfig. The root must NOT glob app sources — it has
+  // no @ui path mapping, so doing so surfaces phantom "cannot find module"
+  // errors. Each app/package is type-checked via its own config (root `tsc`
+  // script runs them); CI/pre-push run `bun run check`.
+  "files": [],
+  "references": [
+    { "path": "./apps/admin/tsconfig.app.json" },
+    { "path": "./apps/admin/tsconfig.node.json" },
+    { "path": "./apps/storefront/tsconfig.app.json" },
+    { "path": "./apps/storefront/tsconfig.node.json" },
+    { "path": "./apps/backend/tsconfig.json" },
+    { "path": "./apps/e2e/tsconfig.json" },
+    { "path": "./packages/ui/tsconfig.json" }
+  ]
 }
