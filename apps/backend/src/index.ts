@@ -12,6 +12,7 @@ import { createAuthRouter } from "./auth/router";
 import { createAccessRouter } from "./access/router";
 import { createPaymentsRouter } from "./payments/router";
 import { createProductImportRouter } from "./products/importRouter";
+import { createTenantRouter } from "./tenants/router";
 import { currentUser, tenantContext } from "./auth/middleware";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -90,8 +91,9 @@ app.use("/auth", createAuthRouter());
 // Payments — Razorpay order creation + signature verification.
 app.use("/payments", createPaymentsRouter());
 
-// ARN access management — mounted before the generic CRUD router so it is not
-// captured by the /api/:resource param route.
+// Tenant master table + ARN access management — mounted before the generic CRUD
+// router so they are not captured by the /api/:resource param route.
+app.use("/api/tenants", createTenantRouter());
 app.use("/api/access", createAccessRouter());
 
 // Product bulk import/template — mounted before generic CRUD so /api/products/

@@ -19,6 +19,8 @@ import {
   ShieldCheck,
   Loader2,
   KeyRound,
+  Users,
+  Settings,
 } from "lucide-react";
 
 import {
@@ -52,6 +54,7 @@ import {
 } from "../constants/app";
 import { orders, reviews, messages } from "../lib/resources";
 import { useAuth } from "../context/auth-context";
+import { TenantPicker } from "../components/TenantPicker";
 
 export const Route = createRootRoute({
   component: RootLayout,
@@ -224,6 +227,7 @@ function AdminShell() {
           <Separator orientation="vertical" className="mr-1 h-5" />
           <h1 className="text-base font-semibold">{title}</h1>
           <div className="ml-auto flex items-center gap-1">
+            <TenantPicker />
             <Button
               variant="ghost"
               size="icon"

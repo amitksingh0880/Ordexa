@@ -98,6 +98,7 @@ export function createAuthRouter(): Router {
       res.json({
         data: {
           id: user.id,
+          tenantId: user.tenantId,
           email: user.email,
           name: user.name,
           role: user.role,

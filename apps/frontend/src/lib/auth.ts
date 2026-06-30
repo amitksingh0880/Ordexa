@@ -21,4 +21,12 @@ export const authApi = {
     await authHttp.post(AUTH_ENDPOINTS.logout).catch(() => undefined);
     setToken(null);
   },
+  async updateProfile(input: {
+    name?: string;
+    currentPassword?: string;
+    newPassword?: string;
+  }): Promise<AuthUser> {
+    const { data } = await authHttp.patch<{ data: AuthUser }>(AUTH_ENDPOINTS.me, input);
+    return data.data;
+  },
 };

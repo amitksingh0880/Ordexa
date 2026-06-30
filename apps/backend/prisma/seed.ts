@@ -5,6 +5,7 @@ import { UserRole } from "../src/constants/auth";
 import { syncPermissionCatalog } from "../src/access/discovery";
 import "../src/access/router"; // registers accessmanagement guard ARNs for discovery
 import "../src/payments/router"; // registers payments:checkout guard ARN for discovery
+import "../src/tenants/router"; // registers tenants:write guard ARN for discovery
 import {
   DEFAULT_TENANT,
   SYSTEM_ROLES,

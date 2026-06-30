@@ -18,6 +18,7 @@ export const ROUTES = {
   messages: "/messages",
   customers: "/customers",
   access: "/access",
+  settings: "/settings",
   login: "/login",
 } as const;
 
@@ -44,6 +45,28 @@ export const ACCESS_ENDPOINTS = {
 export const PRODUCT_IMPORT_ENDPOINTS = {
   template: "/products/template",
   import: "/products/import",
+} as const;
+
+export const CUSTOMERS_COPY = {
+  title: "Customers",
+  name: "Name",
+  email: "Email",
+  role: "Role",
+  orders: "Orders",
+  empty: "No customers yet.",
+} as const;
+
+export const SETTINGS_COPY = {
+  title: "Settings",
+  profile: "Profile",
+  saveProfile: "Save profile",
+  payment: "Payment",
+  shipping: "Shipping",
+  mode: "Mode",
+  live: "Live",
+  test: "Test / Mock",
+  freeOver: "Free shipping over",
+  methods: "Delivery methods",
 } as const;
 
 export const ACCESS_COPY = {
@@ -86,6 +109,11 @@ export const RESOURCES = {
 } as const;
 
 export const AUTH_STORAGE_KEY = "ordexa-admin-token";
+export const TENANT_STORAGE_KEY = "ordexa-admin-tenant";
+
+export const TENANT_ENDPOINTS = {
+  list: "/tenants",
+} as const;
 
 export const ARN = {
   partition: "arn:ordexa",

@@ -41,11 +41,19 @@ export interface Order {
 
 export interface AuthUser {
   id: string;
+  tenantId: string;
   email: string;
   name: string;
   role: string;
   permissions: string[];
   createdAt?: string;
+}
+
+export interface TenantOption {
+  id: string;
+  slug: string;
+  name: string;
+  isActive: boolean;
 }
 
 export interface AccessPermission {
@@ -71,6 +79,7 @@ export interface AccessUser {
   email: string;
   role: string;
   roleIds: string[];
+  orderCount: number;
 }
 
 export interface InventoryItem {

@@ -3,6 +3,7 @@ import { config } from "../config/env";
 import { verifyToken } from "./jwt";
 import { AUTH_ERRORS } from "../constants/auth";
 import { resolveTenantId } from "../access/tenant";
+import { globalSuperArn } from "../constants/arn";
 
 export interface AuthedUser {
   id: string;
@@ -21,15 +22,18 @@ declare global {
   }
 }
 
-// Resolves the tenant for every request: the authenticated user's tenant, or
-// an X-Tenant-Id header / the default tenant for anonymous storefront traffic.
+// Resolves the tenant for every request. A tenant-bound user always uses their
+// own tenant; a global super-admin (and anonymous storefront traffic) may select
+// a tenant via the X-Tenant-Id header, falling back to the default tenant.
 export const tenantContext = async (
   req: Request,
   _res: Response,
   next: NextFunction,
 ): Promise<void> => {
   try {
-    req.tenantId = req.user ? req.user.tenantId : await resolveTenantId(req);
+    const boundToOwnTenant =
+      req.user && !req.user.permissions.includes(globalSuperArn);
+    req.tenantId = boundToOwnTenant ? req.user!.tenantId : await resolveTenantId(req);
   } catch {
     // leave tenantId unset; tenant-scoped routes will reject
   }

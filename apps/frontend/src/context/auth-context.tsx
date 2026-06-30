@@ -6,17 +6,25 @@ import {
   type ReactNode,
 } from "react";
 import { authApi } from "../lib/auth";
-import { getToken } from "../lib/http";
+import { getToken, getTenantId, setTenantId } from "../lib/http";
 import { can } from "../lib/arn";
+import { ARN } from "../constants/app";
 import type { AuthUser } from "../types/domain";
+
+const GLOBAL_SUPER_ARN = `${ARN.partition}:${ARN.wildcard}`;
 
 interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
+  isGlobalSuper: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   can: (module: string, action?: string) => boolean;
 }
+
+const rememberTenant = (user: AuthUser): void => {
+  if (!getTenantId()) setTenantId(user.tenantId);
+};
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -31,23 +39,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     authApi
       .me()
-      .then(setUser)
+      .then((u) => { rememberTenant(u); setUser(u); })
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
   }, []);
 
   const login = async (email: string, password: string) => {
-    setUser(await authApi.login(email, password));
+    const u = await authApi.login(email, password);
+    rememberTenant(u);
+    setUser(u);
   };
 
   const logout = async () => {
     await authApi.logout();
+    setTenantId(null);
     setUser(null);
   };
 
   const value: AuthContextValue = {
     user,
     loading,
+    isGlobalSuper: user ? user.permissions.includes(GLOBAL_SUPER_ARN) : false,
     login,
     logout,
     can: (module, action) => (user ? can(user.permissions, module, action) : false),

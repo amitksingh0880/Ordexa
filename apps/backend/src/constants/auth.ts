@@ -15,6 +15,7 @@ export const AUTH_ERRORS = {
 
 export const PUBLIC_USER_FIELDS = {
   id: true,
+  tenantId: true,
   email: true,
   name: true,
   role: true,
