@@ -149,7 +149,8 @@ export function AutoForm<T extends z.ZodRawShape>({
 
     const result = fieldSchema.safeParse(parsedValue);
     if (!result.success) {
-      const errMsg = result.error.errors[0]?.message || "Invalid input";
+      const issues = result.error.issues ?? result.error.errors ?? [];
+      const errMsg = issues[0]?.message || "Invalid input";
       setErrors((prev) => ({ ...prev, [name]: errMsg }));
     } else {
       setErrors((prev) => {
@@ -189,7 +190,8 @@ export function AutoForm<T extends z.ZodRawShape>({
     const result = schema.safeParse(coercedValues);
     if (!result.success) {
       const newErrors: Record<string, string> = {};
-      for (const err of (result as any).error.errors) {
+      const issues = result.error.issues ?? (result as any).error.errors ?? [];
+      for (const err of issues) {
         const path = err.path[0] as string;
         if (path) {
           newErrors[path] = err.message;
