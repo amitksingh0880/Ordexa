@@ -1,9 +1,6 @@
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
 
-/* Scan the shared component library so its utility classes are generated. */
-@source "../../../packages/ui/src";
-
 @custom-variant dark (&:is(.dark *));
 
 /* Geist Mono is the project font (loaded via @fontsource/geist-mono in main.tsx). */
@@ -123,5 +120,78 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
+  }
+}
+
+/* Storefront ("Ordexa Ether") design tokens — namespaced to avoid clashing with
+   the shadcn semantic palette above. */
+@theme {
+  --color-ink: #000000;
+  --color-ink-soft: #5e5f5c;
+  --color-ink-muted: #8c8880;
+  --color-page: #faf9f5;
+  --color-panel: #f0efeb;
+  --color-soft: #e9e8e4;
+  --color-line: #d9d7d0;
+  --color-surface: #fdf8f8;
+  --color-surface-low: #f7f3f2;
+  --color-surface-container: #f1edec;
+  --color-flare: #ff4b2b;
+  --color-flare-deep: #f24223;
+
+  --font-display: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Work Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --text-display: 120px;
+  --text-display--line-height: 0.9;
+  --text-display--letter-spacing: -0.05em;
+  --text-display--font-weight: 700;
+
+  --text-headline: 82px;
+  --text-headline--line-height: 1.05;
+  --text-headline--letter-spacing: -0.04em;
+  --text-headline--font-weight: 700;
+
+  --text-headline-sm: 48px;
+  --text-headline-sm--line-height: 1.1;
+  --text-headline-sm--letter-spacing: -0.03em;
+  --text-headline-sm--font-weight: 700;
+
+  --text-h2: 32px;
+  --text-h2--line-height: 1.2;
+  --text-h2--letter-spacing: -0.02em;
+  --text-h2--font-weight: 600;
+
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 1.6;
+
+  --text-label: 10px;
+  --text-label--line-height: 1;
+  --text-label--letter-spacing: 0.1em;
+  --text-label--font-weight: 700;
+}
+
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+  }
+  .glass-panel {
+    background: rgba(250, 249, 245, 0.6);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+  }
+  .text-outline {
+    -webkit-text-stroke: 1px currentColor;
+    color: transparent;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }

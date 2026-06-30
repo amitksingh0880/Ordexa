@@ -9,7 +9,7 @@ import {
 import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
-import { LayoutDashboard, ShoppingCart, Boxes, RefreshCw, Copy, ChevronDown, Store } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Boxes, RefreshCw, Copy, ChevronDown } from "lucide-react";
 
 import {
   SidebarProvider,
@@ -25,16 +25,16 @@ import {
   SidebarInset,
   SidebarFooter,
   SidebarSeparator,
-} from "../components/ui/sidebar";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
+} from "@ui/components/ui/sidebar";
+import { Button } from "@ui/components/ui/button";
+import { Input } from "@ui/components/ui/input";
+import { Label } from "@ui/components/ui/label";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu";
+} from "@ui/components/ui/dropdown-menu";
 import {
   APP,
   ROUTES,
@@ -50,7 +50,6 @@ const NAV_ITEMS = [
   { to: ROUTES.dashboard, label: "Dashboard", icon: LayoutDashboard },
   { to: ROUTES.createOrder, label: "Create Order", icon: ShoppingCart },
   { to: ROUTES.inventory, label: "Inventory", icon: Boxes },
-  { to: ROUTES.shop, label: "Storefront", icon: Store },
 ] as const;
 
 export function RootLayout() {
@@ -100,12 +99,6 @@ export function RootLayout() {
       toast.error("Failed to copy");
     }
   };
-
-  // The customer-facing storefront renders its own chrome (header/footer/cart),
-  // so it opts out of the admin sidebar shell.
-  if (pathname.startsWith(ROUTES.shop)) {
-    return <Outlet />;
-  }
 
   return (
     <SidebarProvider>
