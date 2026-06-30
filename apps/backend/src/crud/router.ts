@@ -87,7 +87,10 @@ export function createCrudRouter(): Router {
       const resource = req.resource!;
       const verdict = evaluate(req, resource.policy.list);
       if (verdict.status) return res.status(verdict.status).json({ error: verdict.error });
-      if (isTenantScoped(resource) && !req.tenantId) {
+      // Public storefront reads stay browsable even if a tenant can't be
+      // resolved; only authenticated (owner/arn) lists require a tenant.
+      const publicList = resource.policy.list.kind === "public";
+      if (isTenantScoped(resource) && !req.tenantId && !publicList) {
         return res.status(400).json({ error: "Tenant not resolved" });
       }
 
@@ -95,7 +98,7 @@ export function createCrudRouter(): Router {
       const { search, skip, take, ...rest } = req.query as Record<string, string>;
 
       const where: Record<string, unknown> = {};
-      if (isTenantScoped(resource)) where[TENANT_FIELD] = req.tenantId;
+      if (isTenantScoped(resource) && req.tenantId) where[TENANT_FIELD] = req.tenantId;
       for (const field of filterFields) {
         if (rest[field] !== undefined) where[field] = coerce(rest[field]);
       }
@@ -141,7 +144,9 @@ export function createCrudRouter(): Router {
       }
       if (!item) return res.status(404).json({ error: "Not found" });
 
-      if (isTenantScoped(resource) &&
+      // Enforce tenant ownership only when a tenant is in context; public reads
+      // with no resolvable tenant still return the item (storefront stays open).
+      if (isTenantScoped(resource) && req.tenantId &&
         (item as Record<string, unknown>)[TENANT_FIELD] !== req.tenantId) {
         return res.status(404).json({ error: "Not found" });
       }
