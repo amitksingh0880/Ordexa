@@ -1,6 +1,11 @@
 import type { Request, Response } from "express";
 import type { Handler } from "openapi-backend";
 import { OrderService } from "../services/order.service";
+import {
+  InsufficientInventoryError,
+  UnknownSkuError,
+} from "../services/inventory.service";
+import { VALIDATION } from "../constants/orders";
 
 export const createOrderHandler: Handler = async (
   _context,
@@ -8,16 +13,19 @@ export const createOrderHandler: Handler = async (
   res: Response,
 ) => {
   try {
-    const { userId, totalAmount, status } = req.body as {
+    const { userId, totalAmount, status, description, sku, quantity } = req.body as {
       userId?: string;
       totalAmount?: number;
       status?: string;
+      description?: string;
+      sku?: string;
+      quantity?: number;
     };
 
     if (
       !userId ||
       typeof userId !== "string" ||
-      !/^[0-9a-f-]{36}$/.test(userId) ||
+      !VALIDATION.userIdPattern.test(userId) ||
       typeof totalAmount !== "number" ||
       totalAmount <= 0
     ) {
@@ -27,22 +35,36 @@ export const createOrderHandler: Handler = async (
       });
     }
 
-    const orderService = new OrderService();
-    const order = await orderService.createOrder({ userId, totalAmount, status: status ?? "pending" });
-
-    if (!order) {
-      return res.status(500).json({
+    if (quantity !== undefined && (!Number.isInteger(quantity) || quantity <= 0)) {
+      return res.status(400).json({
         isError: true,
-        errorMessage: "Order creation failed",
+        errorMessage: "Invalid quantity",
       });
     }
+
+    const orderService = new OrderService();
+    const order = await orderService.createOrder({
+      userId,
+      totalAmount,
+      status,
+      description,
+      sku,
+      quantity,
+    });
 
     return res.status(201).json({
       isError: false,
       message: "Order created successfully",
       orderId: order.id,
+      status: order.status,
     });
   } catch (err) {
+    if (err instanceof InsufficientInventoryError) {
+      return res.status(409).json({ isError: true, errorMessage: err.message });
+    }
+    if (err instanceof UnknownSkuError) {
+      return res.status(400).json({ isError: true, errorMessage: err.message });
+    }
     console.error("❌ Error creating order:", err);
     return res.status(500).json({
       isError: true,

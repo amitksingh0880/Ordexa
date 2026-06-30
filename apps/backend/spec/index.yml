@@ -32,9 +32,28 @@ paths:
         "500":
           description: Internal server error
 
+  /inventory:
+    get:
+      summary: List inventory stock levels
+      operationId: getInventory
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InventoryItem'
+        '500':
+          description: Server Error
+
   /orders/{userId}:
     get:
-      summary: Get orders by userId (Cassandra read model)
+      summary: Get orders by userId
       operationId: getOrdersByUser
       parameters:
         - name: userId
@@ -50,16 +69,6 @@ paths:
             minimum: 1
             maximum: 100
             default: 25
-        - name: pagingState
-          in: query
-          required: false
-          schema:
-            type: string
-        - name: offset
-          in: query
-          required: false
-          schema:
-            type: integer
       responses:
         '200':
           description: OK
@@ -99,6 +108,25 @@ components:
           type: string
         description:
           type: string
+        sku:
+          type: string
+          description: Inventory item to order (defaults to DEMO-SKU)
+        quantity:
+          type: integer
+          minimum: 1
+          description: Units to reserve (defaults to 1)
+
+    InventoryItem:
+      type: object
+      properties:
+        sku:
+          type: string
+        name:
+          type: string
+        available:
+          type: integer
+        reserved:
+          type: integer
 
     Order:
       type: object

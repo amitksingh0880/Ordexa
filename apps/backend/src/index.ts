@@ -1,11 +1,16 @@
+import "dotenv/config";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { config } from "./config/env";
 import express from "express";
-import OpenAPIBackend, { type Request as OpenAPIRequest } from "openapi-backend";
+import { OpenAPIBackend, type Request as OpenAPIRequest } from "openapi-backend";
 import { createOrderHandler } from "./handlers/order";
 import { getOrdersByUserHandler } from "./handlers/getOrdersByUser";
-import { connectConsumer } from "./kafka/consumer";
-import { connectProducer } from "./kafka/producer";
+import { getInventoryHandler } from "./handlers/getInventory";
 import cors from "cors";
+
+// Node ESM ("type": "module") has no __dirname; derive it from import.meta.url.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import { trace, context, metrics } from "@opentelemetry/api";
 import { sdk } from "./otel/index";
 import type { ErrorRequestHandler } from "express";
@@ -98,6 +103,7 @@ const api = new OpenAPIBackend({
   handlers: {
     createOrder: createOrderHandler,
     getOrdersByUser: getOrdersByUserHandler,
+    getInventory: getInventoryHandler,
     notFound: (_c, _req, res) => res.status(404).json({ error: "Not found" }),
     validationFail: (c, _req, res) =>
       res.status(400).json({ error: c.validation.errors }),
@@ -112,16 +118,11 @@ app.use((req, res) => api.handleRequest(req as OpenAPIRequest, req, res));
 async function main() {
   await sdk.start(); // ✅ Start OpenTelemetry SDK before any instrumentation
 
-  // Start Kafka connections (after OTel)
-  connectProducer();
-  connectConsumer();
-
-  const PORT = process.env.PORT || 5000;
-  const server = app.listen(PORT, () => {
-    console.log(`🚀 Backend running at http://localhost:${PORT}`);
+  const server = app.listen(config.port, () => {
+    console.log(`🚀 Backend running on port ${config.port}`);
   });
 
-  // Graceful shutdown for Docker / Prod
+  // Graceful shutdown (SIGINT / SIGTERM)
   for (const sig of ["SIGINT", "SIGTERM"] as const) {
     process.on(sig, async () => {
       console.log(`📦 Caught ${sig}, shutting down...`);

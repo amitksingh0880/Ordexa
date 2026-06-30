@@ -29,7 +29,6 @@
     "eslint-plugin-unused-imports": "^4.1.4",
     "gh-pages": "^6.3.0",
     "husky": "^8.0.0",
-    "kafkajs": "^2.2.4",
     "lint-staged": "^16.1.2",
     "openapi-typescript": "^7.8.0",
     "ts-pattern": "^5.7.1",
@@ -45,6 +44,7 @@
   },
   "dependencies": {
     "@apidevtools/json-schema-ref-parser": "^14.1.1",
+    "mongodb": "^7.4.0",
     "openapi-backend": "^5.13.0"
   }
 }

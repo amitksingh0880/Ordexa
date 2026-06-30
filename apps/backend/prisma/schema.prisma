@@ -3,17 +3,20 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider     = "mongodb"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 model Order {
-  id           String        @id @default(uuid())
+  id           String        @id @default(uuid()) @map("_id")
   userId       String
   status       String
-  totalAmount  Decimal
+  totalAmount  Float
   currency     String        @default("USD") // default currency
   description  String?       // optional order notes
+  sku          String        @default("DEMO-SKU") // inventory item ordered
+  quantity     Int           @default(1)           // units requested
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   deletedAt    DateTime?     // for soft delete
@@ -24,8 +27,34 @@ model Order {
   @@index([status])
 }
 
+// Stock levels per SKU. `available` is sellable stock; `reserved` is held by
+// in-flight orders that have not yet been confirmed.
+model Inventory {
+  id        String   @id @default(uuid()) @map("_id")
+  sku       String   @unique
+  name      String
+  available Int      @default(0)
+  reserved  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// One reservation per order; the durable record that lets us compensate
+// (release) or confirm a hold. Status: RESERVED | CONFIRMED | RELEASED.
+model InventoryReservation {
+  id        String   @id @default(uuid()) @map("_id")
+  orderId   String   @unique
+  sku       String
+  quantity  Int
+  status    String   @default("RESERVED")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sku])
+}
+
 model OutboxEvent {
-  id            String    @id @default(uuid())
+  id            String    @id @default(uuid()) @map("_id")
   aggregateId   String
   aggregateType String
   eventType     String
@@ -43,7 +72,7 @@ model OutboxEvent {
 }
 
 model SagaExecution {
-  id           String   @id @default(uuid())
+  id           String   @id @default(uuid()) @map("_id")
   sagaName     String
   status       String
   steps        Json

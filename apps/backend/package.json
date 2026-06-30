@@ -4,14 +4,17 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "build": "prisma generate",
+    "worker": "tsx src/temporal/worker.ts",
     "generate:types": "openapi-typescript ./spec/index.yml --output ./src/types/api.d.ts",
     "test": "bun test",
-    "kafka:consumer": "bun run kafka/consumer/index.ts",
-    "db:reset": "bunx prisma migrate reset --force && bunx prisma generate && bun run prisma/seed.ts",
-    "check:postgres": "bun run scripts/dev/checks/checkPostgres.ts",
-    "seed:cassandra": "bun run scripts/dev/seedCassandra.ts",
-    "check:cassandra": "bun run scripts/dev/checks/checkCassandra.ts"
+    "db:reset": "prisma db push --force-reset && prisma generate",
+    "check:db": "tsx scripts/dev/checks/checkDb.ts"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -32,8 +35,6 @@
     "@opentelemetry/exporter-metrics-otlp-http": "^0.203.0",
     "@opentelemetry/exporter-prometheus": "^0.203.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.203.0",
-    "@opentelemetry/instrumentation-cassandra-driver": "^0.49.0",
-    "@opentelemetry/instrumentation-kafkajs": "^0.13.0",
     "@opentelemetry/instrumentation-pg": "^0.56.0",
     "@opentelemetry/resources": "^2.0.1",
     "@opentelemetry/sdk-logs": "^0.203.0",
@@ -43,13 +44,18 @@
     "@opentelemetry/semantic-conventions": "^1.36.0",
     "@prisma/client": "^6.11.1",
     "@prisma/instrumentation": "^6.14.0",
-    "cassandra-driver": "^4.8.0",
+    "@temporalio/activity": "^1.11.6",
+    "@temporalio/client": "^1.11.6",
+    "@temporalio/worker": "^1.11.6",
+    "@temporalio/workflow": "^1.11.6",
     "chalk": "^5.5.0",
     "cli-table3": "^0.6.5",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "openapi-backend": "^5.17.0",
     "prisma": "^6.11.1",
+    "tsx": "^4.19.2",
     "uuid": "^11.1.0",
     "zod": "^4.1.1"
   }

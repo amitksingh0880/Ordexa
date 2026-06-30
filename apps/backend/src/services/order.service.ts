@@ -1,136 +1,74 @@
-// import { prisma } from "../lib/prisma";
-// import { randomUUID } from "crypto";
-// import type { components } from "../types/api";
-
-// type OrderInput = components["schemas"]["OrderInput"];
-
-// export class OrderService {
-//   async createOrder(input: OrderInput): Promise<{ id: string } | undefined> {
-//     const isValid = this.validateInput(input);
-//     if (!isValid) {
-//       console.error("❌ Invalid OrderInput:", input);
-//       return undefined;
-//     }
-
-//     const orderId = randomUUID();
-//     const eventId = randomUUID();
-//     const now = new Date();
-
-//     try {
-//       const [order] = await prisma.$transaction([
-//         prisma.order.create({
-//           data: {
-//             id: orderId,
-//             userId: input.userId,
-//             status: "Created",
-//             totalAmount: input.totalAmount,
-//           },
-//         }),
-//         prisma.outboxEvent.create({
-//           data: {
-//             id: eventId,
-//             aggregateId: orderId,
-//             aggregateType: "Order",
-//             eventType: "OrderCreated",
-//             payload: {
-//               userId: input.userId,
-//               status: "Created",
-//               totalAmount: input.totalAmount,
-//               createdAt: now,
-//             },
-//           },
-//         }),
-//       ]);
-
-//       return { id: order.id };
-//     } catch (error) {
-//       console.error("❌ Error creating order:", error);
-//       return undefined;
-//     }
-//   }
-
-//   private validateInput(input: any): input is OrderInput {
-//     return (
-//       input &&
-//       typeof input.userId === "string" &&
-//       /^[0-9a-f-]{36}$/.test(input.userId) &&
-//       typeof input.totalAmount === "number" &&
-//       input.totalAmount > 0
-//     );
-//   }
-// }
-
-
-
-
-
+import { randomUUID } from "node:crypto";
 import { prisma } from "../lib/prisma";
-import { randomUUID } from "crypto";
-import type { components } from "../types/api";
-import { runOrderSaga } from "../saga/orderSaga";
+import { runOrderOrchestration } from "../orchestration/orderOrchestrator";
+import { isTemporalEnabled } from "../temporal/client";
+import { INVENTORY_DEFAULTS, ORDER_EVENT, OrderStatus } from "../constants/orders";
 
-type OrderInput = components["schemas"]["OrderInput"];
+export interface CreateOrderInput {
+  userId: string;
+  totalAmount: number;
+  status?: string;
+  description?: string;
+  sku?: string;
+  quantity?: number;
+}
+
+export interface CreateOrderResult {
+  id: string;
+  status: string;
+}
 
 export class OrderService {
-  async createOrder(input: OrderInput): Promise<{ id: string } | undefined> {
-    const isValid = this.validateInput(input);
-    if (!isValid) {
-      console.error("❌ Invalid OrderInput:", input);
-      return undefined;
-    }
-
+  async createOrder(input: CreateOrderInput): Promise<CreateOrderResult> {
     const orderId = randomUUID();
-    const eventId = randomUUID();
+    const sku = input.sku ?? INVENTORY_DEFAULTS.sku;
+    const quantity = input.quantity ?? INVENTORY_DEFAULTS.quantity;
     const now = new Date();
 
-    try {
-      const [order] = await prisma.$transaction([
-        prisma.order.create({
-          data: {
-            id: orderId,
+    // Persist the order (Pending) plus an outbox/audit record atomically.
+    await prisma.$transaction([
+      prisma.order.create({
+        data: {
+          id: orderId,
+          userId: input.userId,
+          status: OrderStatus.Pending,
+          totalAmount: input.totalAmount,
+          description: input.description,
+          sku,
+          quantity,
+        },
+      }),
+      prisma.outboxEvent.create({
+        data: {
+          id: randomUUID(),
+          aggregateId: orderId,
+          aggregateType: ORDER_EVENT.aggregateType,
+          eventType: ORDER_EVENT.createdType,
+          payload: {
             userId: input.userId,
-            status: "Created",
             totalAmount: input.totalAmount,
+            sku,
+            quantity,
+            createdAt: now,
           },
-        }),
-        prisma.outboxEvent.create({
-          data: {
-            id: eventId,
-            aggregateId: orderId,
-            aggregateType: "Order",
-            eventType: "OrderCreated",
-            payload: {
-              userId: input.userId,
-              status: "Created",
-              totalAmount: input.totalAmount,
-              createdAt: now,
-            },
-          },
-        }),
-      ]);
+        },
+      }),
+    ]);
 
-      // ✅ Trigger distributed Saga orchestration
-      await runOrderSaga({
-        orderId,
-        userId: input.userId,
-        totalAmount: input.totalAmount,
-        createdAt: now.toISOString(),
-      });
+    // Drive the inventory saga. Temporal path returns immediately (worker
+    // finishes asynchronously); in-process path runs to completion and throws
+    // on terminal failure (e.g. out of stock), which the handler maps to 409.
+    await runOrderOrchestration({
+      orderId,
+      userId: input.userId,
+      sku,
+      quantity,
+      totalAmount: input.totalAmount,
+    });
 
-      return { id: order.id };
-    } catch (error) {
-      console.error("❌ Error creating order:", error);
-      return undefined;
-    }
-  }
-
-  private validateInput(input: any): input is OrderInput {
-    return (
-      input &&
-      typeof input.userId === "string" &&
-      /^[0-9a-f-]{36}$/.test(input.userId) &&
-      typeof input.totalAmount === "number" &&
-      input.totalAmount > 0
-    );
+    return {
+      id: orderId,
+      status: isTemporalEnabled() ? OrderStatus.Pending : OrderStatus.Confirmed,
+    };
   }
 }

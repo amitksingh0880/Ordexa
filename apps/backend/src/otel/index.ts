@@ -1,81 +1,51 @@
 // otel/index.ts
+//
+// OpenTelemetry is OPTIONAL. It only wires up real exporters when an OTLP
+// endpoint is configured via OTEL_EXPORTER_OTLP_ENDPOINT (e.g. a local
+// collector or a hosted backend like Grafana Cloud). On Render's single-port
+// free tier we leave it off by default, so the app boots clean with no
+// localhost exporters trying (and failing) to connect.
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
-import { ConsoleSpanExporter, BatchSpanProcessor, TraceIdRatioBasedSampler, NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
-import { ConsoleMetricExporter, PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
-import { ConsoleLogRecordExporter, SimpleLogRecordProcessor, type LogRecordExporter, type ReadableLogRecord } from "@opentelemetry/sdk-logs";
-import { PrometheusExporter } from "@opentelemetry/exporter-prometheus";
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-node";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { PrismaInstrumentation } from "@prisma/instrumentation";
 import { logs } from "@opentelemetry/api-logs";
 import { metrics } from "@opentelemetry/api";
-import fs from "node:fs";
-import { Writable } from "node:stream";
+import { config } from "../config/env";
 
+const { enabled: OTEL_ENABLED, endpoint: OTLP_ENDPOINT, serviceName: OTEL_SERVICE_NAME } = config.otel;
 
-// ------------------------------------------------------
-// Resource
-// ------------------------------------------------------
-const resource = resourceFromAttributes({
-  [SemanticResourceAttributes.SERVICE_NAME]: "my-backend",
-  [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: process.env.NODE_ENV || "development",
-});
+// A no-op stand-in so callers can always `await sdk.start()` / `sdk.shutdown()`.
+const noopSdk = {
+  start() {
+    console.log("ℹ️  OpenTelemetry disabled (set OTEL_EXPORTER_OTLP_ENDPOINT to enable).");
+  },
+  async shutdown() {},
+};
 
-const LOG_FILE_PATH = "./logs/ordexa-backend.log";
+function buildSdk() {
+  const resource = resourceFromAttributes({
+    [SemanticResourceAttributes.SERVICE_NAME]: OTEL_SERVICE_NAME,
+    [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: config.nodeEnv,
+  });
 
-// class FileLogRecordExporter implements LogRecordExporter {
-//   private file = fs.createWriteStream(LOG_FILE_PATH, { flags: "a" });
+  const traceExporter = new OTLPTraceExporter({
+    // Accepts the base endpoint; appends the standard /v1/traces path.
+    url: `${OTLP_ENDPOINT!.replace(/\/$/, "")}/v1/traces`,
+  });
 
-//   // export(logs: ReadableLogRecord[], resultCallback: (result: ExportResult) => void): void {
-//   //   for (const record of logs) {
-//   //     this.file.write(JSON.stringify(record.toJSON()) + "\n");
-//   //   }
-//   //   resultCallback({ code: 0 });
-//   // }
+  return new NodeSDK({
+    resource,
+    spanProcessors: [new BatchSpanProcessor(traceExporter)],
+    instrumentations: [...getNodeAutoInstrumentations(), new PrismaInstrumentation()],
+  });
+}
 
-//   shutdown(): Promise<void> {
-//     return new Promise((resolve) => {
-//       this.file.end(() => resolve());
-//     });
-//   }
-// }
+export const sdk = OTEL_ENABLED ? buildSdk() : noopSdk;
 
-// ------------------------------------------------------
-// Console Exporters
-// ------------------------------------------------------
-const traceExporter = new OTLPTraceExporter({
-  url: "http://localhost:4318/v1/traces", // Jaeger OTLP HTTP endpoint
-});
-
-const metricExporter = new PrometheusExporter(
-  { port: 9464, endpoint: "/metrics" },  // 👈 exposes at localhost:9464/metrics
-  () => console.log("✅ Prometheus scrape endpoint: http://localhost:9464/metrics")
-);
-
-
-// const metricExporter = new ConsoleMetricExporter();
-const logExporter = new ConsoleLogRecordExporter();
-
-// ------------------------------------------------------
-// SDK
-// ------------------------------------------------------
-export const sdk = new NodeSDK({
-  resource,
-  spanProcessors: [new BatchSpanProcessor(traceExporter)],
-  metricReader: metricExporter,
-  logRecordProcessors: [
-    new SimpleLogRecordProcessor(logExporter),
-  ],
-  instrumentations: [
-    ...getNodeAutoInstrumentations(),
-    new PrismaInstrumentation(),
-  ],
-});
-
-// ------------------------------------------------------
-// Optional logger + meter instances
-// ------------------------------------------------------
-export const logger = logs.getLogger("my-backend", "1.0.0");
-export const meter = metrics.getMeter("my-backend", "1.0.0");
+// Logger + meter remain available; they are no-ops until/unless OTel is on.
+export const logger = logs.getLogger(OTEL_SERVICE_NAME);
+export const meter = metrics.getMeter(OTEL_SERVICE_NAME);
