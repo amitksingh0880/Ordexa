@@ -1,195 +1,232 @@
-import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Boxes, PackageCheck, Layers, Plus, TrendingUp, DollarSign, ShoppingBag, ArrowUpRight } from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  CartesianGrid,
+  Cell,
+  Tooltip,
+} from "recharts";
+import { DollarSign, ShoppingBag, Boxes, Star, Mail } from "lucide-react";
 
-import { getInventory } from "@/lib/api-client";
-import type { InventoryItem } from "@/types/domain";
-import { APP, ROUTES, CURRENCY } from "@/constants/app";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@ui/components/ui/card";
-import { Button } from "@ui/components/ui/button";
-import { Skeleton } from "@ui/components/ui/skeleton";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@ui/components/ui/card";
 import { Badge } from "@ui/components/ui/badge";
+import { Skeleton } from "@ui/components/ui/skeleton";
+import { Button } from "@ui/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@ui/components/ui/table";
+import { ChartContainer, type ChartConfig } from "@ui/components/ui/chart";
+import {
+  ROUTES,
+  ORDER_STATUS,
+  ORDER_STATUS_TABS,
+  ORDER_STATUS_VARIANT,
+  REVIEW_STATUS,
+  MESSAGE_STATUS,
+  STOCK,
+} from "../constants/app";
+import { formatCurrency, formatDateTime } from "../lib/format";
+import { orders, inventory, products, reviews, messages } from "../lib/resources";
+
+const REVENUE_STATUSES: string[] = [
+  ORDER_STATUS.Confirmed,
+  ORDER_STATUS.Shipped,
+  ORDER_STATUS.Delivered,
+];
+
+const STATUS_COLOR: Record<string, string> = {
+  [ORDER_STATUS.Pending]: "#f59e0b",
+  [ORDER_STATUS.Confirmed]: "#3b82f6",
+  [ORDER_STATUS.Shipped]: "#6366f1",
+  [ORDER_STATUS.Delivered]: "#10b981",
+  [ORDER_STATUS.Cancelled]: "#ef4444",
+};
+
+const chartConfig: ChartConfig = { count: { label: "Orders" } };
 
 export default function DashboardPage() {
-  const [items, setItems] = useState<InventoryItem[] | null>(null);
+  const ordersQuery = orders.useList();
+  const inventoryQuery = inventory.useList();
+  const productsQuery = products.useList();
+  const pendingReviews = reviews.useList({ status: REVIEW_STATUS.Pending });
+  const unreadMessages = messages.useList({ status: MESSAGE_STATUS.Unread });
 
-  useEffect(() => {
-    getInventory()
-      .then((res) => setItems(res.items))
-      .catch(() => setItems([]));
-  }, []);
+  const orderList = ordersQuery.data ?? [];
+  const inventoryList = inventoryQuery.data ?? [];
 
-  const totalSkus = items?.length ?? 0;
-  const totalAvailable = items?.reduce((sum, i) => sum + i.available, 0) ?? 0;
-  const totalReserved = items?.reduce((sum, i) => sum + i.reserved, 0) ?? 0;
+  const revenue = orderList
+    .filter((o) => REVENUE_STATUSES.includes(o.status))
+    .reduce((sum, o) => sum + o.totalAmount, 0);
+  const pendingCount = orderList.filter((o) => o.status === ORDER_STATUS.Pending).length;
+  const lowStock = inventoryList.filter((i) => i.available <= STOCK.lowThreshold).length;
 
-  // Catalog value: available units valued at each item's own price.
-  const totalValue = items?.reduce((sum, i) => sum + i.available * i.price, 0) ?? 0;
-
-  const formattedTotalValue = new Intl.NumberFormat(CURRENCY.locale, {
-    style: "currency",
-    currency: CURRENCY.code,
-  }).format(totalValue);
+  const chartData = ORDER_STATUS_TABS.filter((t) => t.value).map((t) => ({
+    status: t.label,
+    count: orderList.filter((o) => o.status === t.value).length,
+    color: STATUS_COLOR[t.value] ?? "#64748b",
+  }));
 
   const stats = [
-    { 
-      label: "Inventory Value", 
-      value: items === null ? null : formattedTotalValue, 
+    {
+      label: "Revenue",
+      value: ordersQuery.isLoading ? null : formatCurrency(revenue),
       icon: DollarSign,
-      description: "Asset value in warehouse",
-      trend: "+12.5% vs last month",
-      color: "text-emerald-500 bg-emerald-500/10"
+      hint: "Confirmed, shipped & delivered",
+      color: "text-emerald-500 bg-emerald-500/10",
     },
-    { 
-      label: "Active Product SKUs", 
-      value: items === null ? null : totalSkus, 
-      icon: Layers,
-      description: "Unique items in catalog",
-      trend: "All active",
-      color: "text-blue-500 bg-blue-500/10"
+    {
+      label: "Total Orders",
+      value: ordersQuery.isLoading ? null : orderList.length,
+      icon: ShoppingBag,
+      hint: `${pendingCount} awaiting action`,
+      color: "text-blue-500 bg-blue-500/10",
     },
-    { 
-      label: "Available Stock Units", 
-      value: items === null ? null : totalAvailable, 
+    {
+      label: "Low Stock SKUs",
+      value: inventoryQuery.isLoading ? null : lowStock,
       icon: Boxes,
-      description: "Ready for distribution",
-      trend: totalAvailable < 50 ? "Restock needed" : "Healthy levels",
-      color: "text-amber-500 bg-amber-500/10"
+      hint: `of ${inventoryList.length} items`,
+      color: "text-amber-500 bg-amber-500/10",
     },
-    { 
-      label: "Reserved Inventory", 
-      value: items === null ? null : totalReserved, 
-      icon: PackageCheck,
-      description: "Committed to active sagas",
-      trend: `${totalReserved} active holds`,
-      color: "text-indigo-500 bg-indigo-500/10"
+    {
+      label: "Products",
+      value: productsQuery.isLoading ? null : (productsQuery.data?.length ?? 0),
+      icon: ShoppingBag,
+      hint: "Active catalog",
+      color: "text-indigo-500 bg-indigo-500/10",
+    },
+    {
+      label: "Pending Reviews",
+      value: pendingReviews.isLoading ? null : (pendingReviews.data?.length ?? 0),
+      icon: Star,
+      hint: "Awaiting moderation",
+      color: "text-yellow-500 bg-yellow-500/10",
+    },
+    {
+      label: "Unread Messages",
+      value: unreadMessages.isLoading ? null : (unreadMessages.data?.length ?? 0),
+      icon: Mail,
+      hint: "Customer enquiries",
+      color: "text-rose-500 bg-rose-500/10",
     },
   ];
 
-  return (
-    <div className="space-y-8">
-      {/* Header Panel */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-gradient-to-r from-card to-background p-6 rounded-2xl border border-border shadow-sm">
-        <div>
-          <Badge variant="outline" className="mb-2 border-primary/30 text-primary font-semibold">
-            System Dashboard
-          </Badge>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{APP.name}</h1>
-          <p className="text-muted-foreground mt-1 text-sm md:text-base">{APP.tagline}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button asChild variant="outline" className="shadow-sm">
-            <Link to={ROUTES.inventory}>
-              Manage Stock
-            </Link>
-          </Button>
-          <Button asChild className="shadow-lg shadow-primary/20">
-            <Link to={ROUTES.createOrder} className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              New Order
-            </Link>
-          </Button>
-        </div>
-      </div>
+  const recentOrders = [...orderList].slice(0, 6);
 
-      {/* Stats Cards Grid */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {stats.map((stat) => (
-          <Card key={stat.label} className="overflow-hidden hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <span className="text-sm font-medium text-muted-foreground">{stat.label}</span>
-              <div className={`p-2 rounded-lg ${stat.color}`}>
-                <stat.icon className="h-4 w-4" />
+          <Card key={stat.label}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <span className="text-muted-foreground text-xs font-medium">{stat.label}</span>
+              <div className={`rounded-md p-1.5 ${stat.color}`}>
+                <stat.icon className="size-3.5" />
               </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold tracking-tight">
-                {stat.value === null ? (
-                  <Skeleton className="h-8 w-24" />
-                ) : (
-                  stat.value
-                )}
+                {stat.value === null ? <Skeleton className="h-7 w-16" /> : stat.value}
               </div>
-              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
-                <span className="font-semibold text-foreground/80">{stat.trend}</span>
-                <span>•</span>
-                <span>{stat.description}</span>
-              </p>
+              <p className="text-muted-foreground mt-1 text-xs">{stat.hint}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Dynamic Actions & Quickstarts */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="shadow-sm hover:shadow-md transition-shadow">
+      <div className="grid gap-6 lg:grid-cols-5">
+        <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
-              <ShoppingBag className="h-5 w-5 text-primary" />
-              Operational Flow
-            </CardTitle>
-            <CardDescription>
-              Launch key workflows to verify saga consistency and outbox processing.
-            </CardDescription>
+            <CardTitle className="text-base">Orders by Status</CardTitle>
+            <CardDescription>Current distribution across the pipeline</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-start gap-4 p-4 rounded-xl border border-border bg-accent/20">
-              <div className="p-2 rounded-lg bg-primary/10 text-primary mt-0.5">
-                <TrendingUp className="h-4 w-4" />
-              </div>
-              <div className="flex-1 space-y-1">
-                <h4 className="font-semibold text-sm">Create Reservation Sagas</h4>
-                <p className="text-xs text-muted-foreground">
-                  Triggers outbox pattern events, runs dual-write check, and updates stock.
-                </p>
-              </div>
-              <Button size="sm" asChild variant="ghost" className="h-8 px-2">
-                <Link to={ROUTES.createOrder}>
-                  <ArrowUpRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-            <div className="flex items-start gap-4 p-4 rounded-xl border border-border bg-accent/20">
-              <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500 mt-0.5">
-                <Boxes className="h-4 w-4" />
-              </div>
-              <div className="flex-1 space-y-1">
-                <h4 className="font-semibold text-sm">Inspect Catalog Levels</h4>
-                <p className="text-xs text-muted-foreground">
-                  Check available vs reserved levels directly stored in MongoDB Atlas collections.
-                </p>
-              </div>
-              <Button size="sm" asChild variant="ghost" className="h-8 px-2">
-                <Link to={ROUTES.inventory}>
-                  <ArrowUpRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
+          <CardContent>
+            <ChartContainer config={chartConfig} className="h-[240px]">
+              <BarChart data={chartData} margin={{ left: -16, right: 8 }}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="status" tickLine={false} axisLine={false} fontSize={11} />
+                <Tooltip
+                  cursor={false}
+                  contentStyle={{
+                    borderRadius: 8,
+                    border: "1px solid var(--border)",
+                    background: "var(--popover)",
+                    fontSize: 12,
+                  }}
+                />
+                <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                  {chartData.map((d) => (
+                    <Cell key={d.status} fill={d.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ChartContainer>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm bg-gradient-to-br from-card to-accent/20 border-primary/10">
-          <CardHeader>
-            <CardTitle className="text-xl">Database Configuration</CardTitle>
-            <CardDescription>
-              Details about your active system environment.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="p-3 bg-background/50 rounded-lg border border-border/40">
-                <span className="text-xs text-muted-foreground block">Active Database</span>
-                <span className="font-semibold text-foreground mt-0.5 block">MongoDB Atlas</span>
-              </div>
-              <div className="p-3 bg-background/50 rounded-lg border border-border/40">
-                <span className="text-xs text-muted-foreground block">Saga Engine</span>
-                <span className="font-semibold text-foreground mt-0.5 block">Temporal Server</span>
-              </div>
-              <div className="p-3 bg-background/50 rounded-lg border border-border/40 col-span-2">
-                <span className="text-xs text-muted-foreground block">Prisma Connection Mode</span>
-                <span className="font-semibold text-foreground mt-0.5 block font-mono text-xs">relationMode = "prisma"</span>
-              </div>
+        <Card className="lg:col-span-3">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-base">Recent Orders</CardTitle>
+              <CardDescription>Latest activity from the storefront</CardDescription>
             </div>
+            <Button asChild variant="outline" size="sm">
+              <Link to={ROUTES.orders}>View all</Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {ordersQuery.isLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-10 w-full" />
+                ))}
+              </div>
+            ) : recentOrders.length === 0 ? (
+              <p className="text-muted-foreground py-8 text-center text-sm">No orders yet.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead className="text-right">Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recentOrders.map((o) => (
+                    <TableRow key={o.id}>
+                      <TableCell className="font-medium">
+                        {o.customerName ?? "Guest"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={ORDER_STATUS_VARIANT[o.status] ?? "secondary"}>
+                          {o.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(o.totalAmount)}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-right text-xs">
+                        {formatDateTime(o.createdAt)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>

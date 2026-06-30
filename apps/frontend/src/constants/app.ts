@@ -1,45 +1,134 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Centralized UI constants — labels, routes, API paths, status metadata.
+// Centralized admin UI constants — labels, routes, API resources, status metadata.
 // No literal in a component should duplicate a value defined here.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const APP = {
   name: "Ordexa",
-  tagline: "Order & Inventory Management",
+  tagline: "Shop Management Console",
 } as const;
 
 // Client-side route paths (TanStack Router).
 export const ROUTES = {
   dashboard: "/",
-  createOrder: "/orders/create",
+  orders: "/orders",
   inventory: "/inventory",
-  ordersByUser: (userId: string) => `/orders/${userId}`,
+  products: "/products",
+  reviews: "/reviews",
+  messages: "/messages",
 } as const;
 
-// Backend API paths (joined to VITE_API_URL by the api client).
-export const API_PATHS = {
-  createOrder: "/order/create",
-  ordersByUser: (userId: string) => `/orders/${userId}`,
-  inventory: "/inventory",
+// Generic CRUD API: base path + the resource segments under /api/:resource.
+export const API = {
+  crudBasePath: "/api",
 } as const;
 
+export const RESOURCES = {
+  products: "products",
+  collections: "collections",
+  orders: "orders",
+  inventory: "inventory",
+  reviews: "reviews",
+  messages: "messages",
+} as const;
+
+export type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
+
+// ── Orders ───────────────────────────────────────────────────────────────────
 export const ORDER_STATUS = {
   Pending: "Pending",
   Confirmed: "Confirmed",
+  Shipped: "Shipped",
+  Delivered: "Delivered",
+  Cancelled: "Cancelled",
   Failed: "Failed",
 } as const;
 export type OrderStatus = (typeof ORDER_STATUS)[keyof typeof ORDER_STATUS];
 
-export type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
+// Allowed next statuses, and the action label the admin sees for each transition.
+export const ORDER_TRANSITIONS: Record<string, OrderStatus[]> = {
+  [ORDER_STATUS.Pending]: [ORDER_STATUS.Confirmed, ORDER_STATUS.Cancelled],
+  [ORDER_STATUS.Confirmed]: [ORDER_STATUS.Shipped, ORDER_STATUS.Cancelled],
+  [ORDER_STATUS.Shipped]: [ORDER_STATUS.Delivered],
+  [ORDER_STATUS.Delivered]: [],
+  [ORDER_STATUS.Cancelled]: [],
+  [ORDER_STATUS.Failed]: [],
+};
 
-// Maps an order status to its shadcn Badge variant.
+export const ORDER_ACTION_LABEL: Record<string, string> = {
+  [ORDER_STATUS.Confirmed]: "Accept",
+  [ORDER_STATUS.Cancelled]: "Reject",
+  [ORDER_STATUS.Shipped]: "Mark Shipped",
+  [ORDER_STATUS.Delivered]: "Mark Delivered",
+};
+
 export const ORDER_STATUS_VARIANT: Record<string, BadgeVariant> = {
   [ORDER_STATUS.Pending]: "secondary",
   [ORDER_STATUS.Confirmed]: "default",
+  [ORDER_STATUS.Shipped]: "default",
+  [ORDER_STATUS.Delivered]: "outline",
+  [ORDER_STATUS.Cancelled]: "destructive",
   [ORDER_STATUS.Failed]: "destructive",
 };
 
-// Stock-level thresholds for the inventory badges.
+// Status filter tabs for the Orders page ("" = all).
+export const ORDER_STATUS_TABS = [
+  { value: "", label: "All" },
+  { value: ORDER_STATUS.Pending, label: "Pending" },
+  { value: ORDER_STATUS.Confirmed, label: "Confirmed" },
+  { value: ORDER_STATUS.Shipped, label: "Shipped" },
+  { value: ORDER_STATUS.Delivered, label: "Delivered" },
+  { value: ORDER_STATUS.Cancelled, label: "Cancelled" },
+] as const;
+
+// ── Reviews ──────────────────────────────────────────────────────────────────
+export const REVIEW_STATUS = {
+  Pending: "Pending",
+  Published: "Published",
+  Rejected: "Rejected",
+} as const;
+export type ReviewStatus = (typeof REVIEW_STATUS)[keyof typeof REVIEW_STATUS];
+
+export const REVIEW_STATUS_VARIANT: Record<string, BadgeVariant> = {
+  [REVIEW_STATUS.Pending]: "secondary",
+  [REVIEW_STATUS.Published]: "default",
+  [REVIEW_STATUS.Rejected]: "destructive",
+};
+
+export const REVIEW_STATUS_TABS = [
+  { value: REVIEW_STATUS.Pending, label: "Pending" },
+  { value: REVIEW_STATUS.Published, label: "Published" },
+  { value: REVIEW_STATUS.Rejected, label: "Rejected" },
+] as const;
+
+// ── Messages ─────────────────────────────────────────────────────────────────
+export const MESSAGE_STATUS = {
+  Unread: "Unread",
+  Read: "Read",
+  Archived: "Archived",
+} as const;
+export type MessageStatus = (typeof MESSAGE_STATUS)[keyof typeof MESSAGE_STATUS];
+
+export const MESSAGE_STATUS_VARIANT: Record<string, BadgeVariant> = {
+  [MESSAGE_STATUS.Unread]: "default",
+  [MESSAGE_STATUS.Read]: "secondary",
+  [MESSAGE_STATUS.Archived]: "outline",
+};
+
+// ── Payments ─────────────────────────────────────────────────────────────────
+export const PAYMENT_STATUS = {
+  Unpaid: "Unpaid",
+  Paid: "Paid",
+  Refunded: "Refunded",
+} as const;
+
+export const PAYMENT_STATUS_VARIANT: Record<string, BadgeVariant> = {
+  [PAYMENT_STATUS.Unpaid]: "secondary",
+  [PAYMENT_STATUS.Paid]: "default",
+  [PAYMENT_STATUS.Refunded]: "outline",
+};
+
+// ── Inventory ────────────────────────────────────────────────────────────────
 export const STOCK = {
   lowThreshold: 10,
   labels: {
@@ -54,22 +143,9 @@ export const STOCK = {
   },
 } as const;
 
-// Defaults for the create-order form.
-export const ORDER_DEFAULTS = {
-  quantity: 1,
-  status: "Created",
-} as const;
-
-// Currency for the admin UI — matches the storefront catalog (USD).
 export const CURRENCY = {
   locale: "en-US",
   code: "USD",
 } as const;
 
-// localStorage keys + limits for the User ID helper in the sidebar.
-export const STORAGE_KEYS = {
-  userIdHistory: "ordexa-user-id-history",
-  lastUserId: "ordexa-user-id",
-} as const;
-
-export const USER_ID_HISTORY_LIMIT = 5;
+export const THEME_STORAGE_KEY = "ordexa-admin-theme";

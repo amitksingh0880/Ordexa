@@ -18,6 +18,9 @@ model Order {
   customerName  String?
   customerEmail String?
   items         Json?         // snapshot of cart lines [{ productSlug, name, price, finish, quantity }]
+  paymentId     String?
+  paymentStatus String        @default("Unpaid") // Unpaid | Paid | Refunded
+  paymentMethod String?
   sku           String        @default("DEMO-SKU")
   quantity      Int           @default(1)
   createdAt     DateTime      @default(now())

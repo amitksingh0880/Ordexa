@@ -11,6 +11,7 @@ import type { CartItem, Product } from "../types/shop";
 
 interface CartContextValue {
   lines: CartItem[];
+  cartId: string;
   count: number;
   subtotal: number;
   isLoading: boolean;
@@ -48,6 +49,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     return {
       lines,
+      cartId,
       count,
       subtotal,
       isLoading,

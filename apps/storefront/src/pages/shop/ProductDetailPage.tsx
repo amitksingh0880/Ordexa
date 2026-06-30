@@ -8,6 +8,7 @@ import { Card } from "@ui/components/ui/card";
 import { Separator } from "@ui/components/ui/separator";
 import { Skeleton } from "@ui/components/ui/skeleton";
 import { Stars } from "../../components/shop/Stars";
+import { ProductReviews } from "../../components/shop/ProductReviews";
 import { ProductCard } from "../../components/shop/ProductCard";
 import { cn } from "@ui/lib/utils";
 import { ROUTES } from "../../constants/app";
@@ -231,6 +232,8 @@ export default function ProductDetailPage({ productId }: { productId: string }) 
           </div>
         </div>
       </section>
+
+      <ProductReviews productSlug={product.slug} />
 
       {relatedItems.length > 0 ? (
         <section className="mt-24">

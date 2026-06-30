@@ -11,6 +11,9 @@ export const SHOP = {
     products: "products",
     collections: "collections",
     cart: "cart",
+    orders: "orders",
+    reviews: "reviews",
+    messages: "messages",
   },
 
   currency: { locale: "en-US", code: "USD" },
@@ -117,6 +120,36 @@ export const SHOP = {
     empty: "Your bag is empty.",
     emptyCta: "Explore Collection",
     remove: "Remove",
+    checkoutTitle: "Complete your order",
+    checkoutSubtitle: "Enter your details — we'll confirm by email.",
+    nameLabel: "Full name",
+    emailLabel: "Email address",
+    placeOrder: "Place Order",
+    orderPlaced: "Order placed — we'll be in touch shortly.",
+  },
+
+  reviews: {
+    title: "Reviews",
+    empty: "No reviews yet. Be the first.",
+    writeTitle: "Write a review",
+    ratingLabel: "Your rating",
+    nameLabel: "Your name",
+    bodyLabel: "Your review",
+    submit: "Submit Review",
+    success: "Thank you — your review is awaiting moderation.",
+  },
+
+  contact: {
+    eyebrow: "Contact",
+    title: "Get in touch",
+    intro:
+      "Questions about a piece, an order, or a collaboration? Send us a note and the studio will respond.",
+    nameLabel: "Name",
+    emailLabel: "Email",
+    subjectLabel: "Subject",
+    bodyLabel: "Message",
+    submit: "Send Message",
+    success: "Message sent — thank you for reaching out.",
   },
 
   journal: {
@@ -156,6 +189,24 @@ export const SHOP = {
     ],
   },
 
+  payment: {
+    company: `${APP.name} Ether`,
+    description: "Ordexa order payment",
+    method: "Razorpay",
+    detailsTitle: "Shipping details",
+    detailsSubtitle: "We'll send your receipt and updates here.",
+    continue: "Continue to Payment",
+    payTitle: "Razorpay Checkout",
+    payCta: "Pay",
+    processing: "Processing payment…",
+    success: "Payment successful — order placed.",
+    failed: "Payment failed or cancelled.",
+    simulateFail: "Simulate failed payment",
+    securedNote: "Secured by Razorpay",
+    demoNote: "Demo mode — no real charge is made.",
+    testCard: "Test card · 4111 1111 1111 1111",
+  },
+
   footer: {
     groups: [
       {
@@ -170,7 +221,7 @@ export const SHOP = {
         title: "Company",
         links: [
           { label: "Sustainability", to: ROUTES.shop },
-          { label: "Contact", to: ROUTES.shop },
+          { label: "Contact", to: ROUTES.contact },
           { label: "Journal", to: ROUTES.journal },
         ],
       },

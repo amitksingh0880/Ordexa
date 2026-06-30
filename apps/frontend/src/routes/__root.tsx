@@ -1,15 +1,20 @@
-// src/routes/__root.tsx
 import {
   Outlet,
   Link,
-  useNavigate,
   useLocation,
   createRootRoute,
 } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
-import { toast } from "sonner";
-import { LayoutDashboard, Boxes, RefreshCw, Copy, ChevronDown } from "lucide-react";
+import {
+  LayoutDashboard,
+  ShoppingBag,
+  Boxes,
+  Package,
+  Star,
+  Mail,
+  Moon,
+  Sun,
+} from "lucide-react";
 
 import {
   SidebarProvider,
@@ -19,160 +24,164 @@ import {
   SidebarHeader,
   SidebarGroup,
   SidebarGroupLabel,
+  SidebarGroupContent,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuBadge,
   SidebarInset,
   SidebarFooter,
-  SidebarSeparator,
 } from "@ui/components/ui/sidebar";
 import { Button } from "@ui/components/ui/button";
-import { Input } from "@ui/components/ui/input";
-import { Label } from "@ui/components/ui/label";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@ui/components/ui/dropdown-menu";
+import { Separator } from "@ui/components/ui/separator";
 import {
   APP,
   ROUTES,
-  STORAGE_KEYS,
-  USER_ID_HISTORY_LIMIT,
+  RESOURCES,
+  ORDER_STATUS,
+  REVIEW_STATUS,
+  MESSAGE_STATUS,
+  THEME_STORAGE_KEY,
 } from "../constants/app";
+import { orders, reviews, messages } from "../lib/resources";
 
 export const Route = createRootRoute({
   component: RootLayout,
 });
 
 const NAV_ITEMS = [
-  { to: ROUTES.dashboard, label: "Dashboard", icon: LayoutDashboard },
-  { to: ROUTES.inventory, label: "Inventory", icon: Boxes },
+  { to: ROUTES.dashboard, label: "Dashboard", icon: LayoutDashboard, badge: null },
+  { to: ROUTES.orders, label: "Orders", icon: ShoppingBag, badge: RESOURCES.orders },
+  { to: ROUTES.inventory, label: "Inventory", icon: Boxes, badge: null },
+  { to: ROUTES.products, label: "Products", icon: Package, badge: null },
+  { to: ROUTES.reviews, label: "Reviews", icon: Star, badge: RESOURCES.reviews },
+  { to: ROUTES.messages, label: "Messages", icon: Mail, badge: RESOURCES.messages },
 ] as const;
 
-export function RootLayout() {
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
-  const [userId, setUserId] = useState("");
-  const [error, setError] = useState("");
-  const [history, setHistory] = useState<string[]>([]);
+const PAGE_TITLES: Record<string, string> = {
+  [ROUTES.dashboard]: "Dashboard",
+  [ROUTES.orders]: "Orders",
+  [ROUTES.inventory]: "Inventory & Pricing",
+  [ROUTES.products]: "Products",
+  [ROUTES.reviews]: "Reviews",
+  [ROUTES.messages]: "Messages",
+};
+
+function useTheme() {
+  const [dark, setDark] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEYS.userIdHistory);
-    if (stored) setHistory(JSON.parse(stored));
-    const lastUsed = localStorage.getItem(STORAGE_KEYS.lastUserId);
-    if (lastUsed) setUserId(lastUsed);
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    const isDark = stored === "dark";
+    setDark(isDark);
+    document.documentElement.classList.toggle("dark", isDark);
   }, []);
 
-  useEffect(() => {
-    if (userId) localStorage.setItem(STORAGE_KEYS.lastUserId, userId);
-  }, [userId]);
-
-  const saveToHistory = (id: string) => {
-    const updated = [id, ...history.filter((u) => u !== id)].slice(0, USER_ID_HISTORY_LIMIT);
-    setHistory(updated);
-    localStorage.setItem(STORAGE_KEYS.userIdHistory, JSON.stringify(updated));
+  const toggle = () => {
+    setDark((prev) => {
+      const next = !prev;
+      document.documentElement.classList.toggle("dark", next);
+      localStorage.setItem(THEME_STORAGE_KEY, next ? "dark" : "light");
+      return next;
+    });
   };
 
-  const handleGoToOrders = () => {
-    if (!userId.trim()) {
-      setError("Please enter a valid User ID");
-      return;
-    }
-    setError("");
-    saveToHistory(userId);
-    navigate({ to: ROUTES.ordersByUser(userId) });
+  return { dark, toggle };
+}
+
+export function RootLayout() {
+  const { pathname } = useLocation();
+  const { dark, toggle } = useTheme();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const pendingOrders = orders.useList({ status: ORDER_STATUS.Pending });
+  const pendingReviews = reviews.useList({ status: REVIEW_STATUS.Pending });
+  const unreadMessages = messages.useList({ status: MESSAGE_STATUS.Unread });
+
+  const badgeCounts: Record<string, number | undefined> = {
+    [RESOURCES.orders]: pendingOrders.data?.length,
+    [RESOURCES.reviews]: pendingReviews.data?.length,
+    [RESOURCES.messages]: unreadMessages.data?.length,
   };
 
-  const handleGenerateUUID = () => {
-    setUserId(uuidv4());
-    toast.success("UUID generated");
-  };
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(userId);
-      toast.success("Copied User ID to clipboard");
-    } catch {
-      toast.error("Failed to copy");
-    }
-  };
+  const title = PAGE_TITLES[pathname] ?? APP.name;
 
   return (
-    <SidebarProvider>
-      <Sidebar>
+    <SidebarProvider
+      open={sidebarOpen}
+      onOpenChange={setSidebarOpen}
+      className="hover-sidebar"
+    >
+      <Sidebar
+        variant="inset"
+        collapsible="icon"
+        onMouseEnter={() => setSidebarOpen(true)}
+        onMouseLeave={() => setSidebarOpen(false)}
+      >
+        <SidebarHeader>
+          <div className="flex items-center gap-2 px-2 py-1">
+            <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold">
+              O
+            </div>
+            <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
+              <span className="text-sm font-semibold">{APP.name}</span>
+              <span className="text-muted-foreground text-xs">{APP.tagline}</span>
+            </div>
+          </div>
+        </SidebarHeader>
+
         <SidebarContent>
-          <SidebarHeader>
-            <div className="flex items-center justify-between px-1">
-              <span className="font-semibold">{APP.name}</span>
-              <SidebarTrigger />
-            </div>
-          </SidebarHeader>
-
           <SidebarGroup>
-            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-            <SidebarMenu>
-              {NAV_ITEMS.map((item) => (
-                <SidebarMenuItem key={item.to}>
-                  <SidebarMenuButton asChild isActive={pathname === item.to}>
-                    <Link to={item.to}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+            <SidebarGroupLabel>Management</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {NAV_ITEMS.map((item) => {
+                  const count = item.badge ? badgeCounts[item.badge] : undefined;
+                  const isActive =
+                    item.to === ROUTES.dashboard
+                      ? pathname === item.to
+                      : pathname.startsWith(item.to);
+                  return (
+                    <SidebarMenuItem key={item.to}>
+                      <SidebarMenuButton asChild isActive={isActive} tooltip={item.label}>
+                        <Link to={item.to}>
+                          <item.icon className="size-4" />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                      {count ? <SidebarMenuBadge>{count}</SidebarMenuBadge> : null}
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
           </SidebarGroup>
-
-          <SidebarSeparator />
-
-          <SidebarFooter>
-            <Label htmlFor="userId" className="text-sm font-medium">
-              User ID
-            </Label>
-            <Input
-              id="userId"
-              placeholder="Enter or generate a User ID"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              className="mb-2"
-            />
-            <div className="flex gap-2">
-              <Button size="sm" onClick={handleGoToOrders}>
-                View Orders
-              </Button>
-              <Button size="sm" variant="outline" onClick={handleGenerateUUID} aria-label="Generate UUID">
-                <RefreshCw />
-              </Button>
-              <Button size="sm" variant="ghost" onClick={handleCopy} aria-label="Copy User ID">
-                <Copy />
-              </Button>
-              {history.length > 0 && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button size="sm" variant="ghost" aria-label="Recent User IDs">
-                      <ChevronDown />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    {history.map((id) => (
-                      <DropdownMenuItem key={id} onClick={() => setUserId(id)} className="font-mono">
-                        {id.slice(0, 24)}…
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
-            {error && <p className="text-destructive mt-1 text-xs">{error}</p>}
-          </SidebarFooter>
         </SidebarContent>
+
+        <SidebarFooter>
+          <span className="text-muted-foreground px-2 text-xs group-data-[collapsible=icon]:hidden">
+            © {new Date().getFullYear()} {APP.name}
+          </span>
+        </SidebarFooter>
       </Sidebar>
 
       <SidebarInset>
-        <div className="p-6">
+        <header className="bg-background/80 sticky top-0 z-10 flex h-14 items-center gap-2 border-b px-4 backdrop-blur">
+          <SidebarTrigger />
+          <Separator orientation="vertical" className="mr-1 h-5" />
+          <h1 className="text-base font-semibold">{title}</h1>
+          <div className="ml-auto">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggle}
+              aria-label="Toggle theme"
+            >
+              {dark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+            </Button>
+          </div>
+        </header>
+        <div className="p-4 md:p-6">
           <Outlet />
         </div>
       </SidebarInset>

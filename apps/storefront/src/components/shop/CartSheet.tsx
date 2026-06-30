@@ -1,5 +1,5 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { toast } from "sonner";
 import {
   Sheet,
   SheetContent,
@@ -11,13 +11,14 @@ import {
 import { Button } from "@ui/components/ui/button";
 import { Separator } from "@ui/components/ui/separator";
 import { QuantityStepper } from "./QuantityStepper";
+import { CheckoutDialog } from "./CheckoutDialog";
 import { ROUTES } from "../../constants/app";
 import { SHOP, formatPrice } from "../../constants/shop";
 import { useCart } from "../../context/cart-context";
 
 export function CartSheet() {
-  const { lines, count, subtotal, open, setOpen, updateQuantity, removeItem, clear } =
-    useCart();
+  const { lines, count, subtotal, open, setOpen, updateQuantity, removeItem } = useCart();
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -44,16 +45,9 @@ export function CartSheet() {
           <>
             <div className="flex-1 space-y-2 overflow-y-auto px-6 py-4">
               {lines.map((line) => (
-                <div
-                  key={line.id}
-                  className="flex gap-4 border-b border-line/10 py-4"
-                >
+                <div key={line.id} className="flex gap-4 border-b border-line/10 py-4">
                   <div className="h-40 w-32 flex-shrink-0 overflow-hidden bg-surface-container">
-                    <img
-                      src={line.image}
-                      alt={line.name}
-                      className="h-full w-full object-cover"
-                    />
+                    <img src={line.image} alt={line.name} className="h-full w-full object-cover" />
                   </div>
                   <div className="flex flex-1 flex-col justify-between py-1">
                     <div>
@@ -109,11 +103,7 @@ export function CartSheet() {
               </div>
               <Button
                 className="w-full rounded-none bg-ink py-7 font-body text-label uppercase tracking-[0.2em] text-white shadow-lg hover:bg-ink/80"
-                onClick={() => {
-                  toast.success(SHOP.cart.checkoutSuccess);
-                  clear();
-                  setOpen(false);
-                }}
+                onClick={() => setCheckoutOpen(true)}
               >
                 {SHOP.cart.checkout}
               </Button>
@@ -124,6 +114,8 @@ export function CartSheet() {
           </>
         )}
       </SheetContent>
+
+      <CheckoutDialog open={checkoutOpen} onOpenChange={setCheckoutOpen} />
     </Sheet>
   );
 }

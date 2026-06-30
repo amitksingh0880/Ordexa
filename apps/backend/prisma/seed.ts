@@ -390,6 +390,8 @@ async function main() {
   ];
   for (const o of orders) {
     const totalAmount = o.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    const paid =
+      ["Confirmed", "Shipped", "Delivered"].includes(o.status) || o.id === "seed-order-1";
     const base = {
       userId: o.id,
       status: o.status,
@@ -398,6 +400,9 @@ async function main() {
       customerName: o.customerName,
       customerEmail: o.customerEmail,
       items: o.items,
+      paymentStatus: paid ? "Paid" : "Unpaid",
+      paymentMethod: paid ? "Razorpay" : null,
+      paymentId: paid ? `pay_${o.id.replace("seed-order-", "seed")}` : null,
       createdAt: new Date(Date.now() - o.daysAgo * day),
     };
     await prisma.order.upsert({ where: { id: o.id }, update: base, create: { id: o.id, ...base } });
