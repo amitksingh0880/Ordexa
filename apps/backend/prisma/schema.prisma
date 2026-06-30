@@ -9,28 +9,150 @@ datasource db {
 }
 
 model Order {
-  id            String        @id @default(uuid()) @map("_id")
-  userId        String
-  status        String
-  totalAmount   Float
-  currency      String        @default("USD")
-  description   String?
-  customerName  String?
-  customerEmail String?
-  items         Json?         // snapshot of cart lines [{ productSlug, name, price, finish, quantity }]
-  paymentId     String?
-  paymentStatus String        @default("Unpaid") // Unpaid | Paid | Refunded
-  paymentMethod String?
-  sku           String        @default("DEMO-SKU")
-  quantity      Int           @default(1)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  deletedAt     DateTime?
+  id              String        @id @default(uuid()) @map("_id")
+  userId          String
+  status          String
+  totalAmount     Float
+  currency        String        @default("USD")
+  description     String?
+  customerName    String?
+  customerEmail   String?
+  items           Json?         // snapshot of cart lines [{ productSlug, name, price, finish, quantity }]
+  shippingAddress Json?         // snapshot of the chosen Address at checkout time
+  shippingMethod  String?
+  shippingCost    Float         @default(0)
+  paymentId       String?
+  razorpayOrderId String?
+  paymentStatus   String        @default("Unpaid") // Unpaid | Paid | Refunded
+  paymentMethod   String?
+  sku             String        @default("DEMO-SKU")
+  quantity        Int           @default(1)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
 
-  outboxEvents  OutboxEvent[]
+  outboxEvents    OutboxEvent[]
 
   @@index([userId])
   @@index([status])
+}
+
+// A store/organization. Users, roles, and ARNs are scoped to a tenant.
+model Tenant {
+  id        String   @id @default(uuid()) @map("_id")
+  slug      String   @unique
+  name      String
+  isActive  Boolean  @default(true)
+  config    Json?    // per-tenant overrides (branding, shipping, payment keys, …)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users User[]
+  roles AccessRole[]
+}
+
+// `role` is the coarse core role; fine-grained access comes from ARN
+// permissions resolved via AccessUserRoleMapping.
+model User {
+  id           String    @id @default(uuid()) @map("_id")
+  tenantId     String
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         String    @default("customer") // customer | admin
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tenant       Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  addresses    Address[]
+  roleMappings AccessUserRoleMapping[]
+
+  @@index([tenantId])
+}
+
+// ARN access control: Permissions (catalogued ARNs) → Roles → Users. A user's
+// effective ARNs are the union of their roles' permissions, baked into the JWT.
+
+model AccessPermission {
+  id              String    @id @default(uuid()) @map("_id")
+  permissionName  String
+  resourceArn     String    @unique
+  description     String?
+  isActive        Boolean   @default(true)
+  deprecatedSince DateTime?
+  createdAt       DateTime  @default(now())
+
+  roleMappings    AccessRolePermissionMapping[]
+}
+
+model AccessRole {
+  id           String    @id @default(uuid()) @map("_id")
+  tenantId     String
+  roleName     String
+  description  String?
+  isActive     Boolean   @default(true)
+  isSuperAdmin Boolean   @default(false)
+  isDeleted    Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tenant             Tenant                        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  permissionMappings AccessRolePermissionMapping[]
+  userMappings       AccessUserRoleMapping[]
+
+  @@unique([tenantId, roleName])
+  @@index([tenantId])
+}
+
+model AccessRolePermissionMapping {
+  id           String   @id @default(uuid()) @map("_id")
+  roleId       String
+  permissionId String
+  createdAt    DateTime @default(now())
+  isDeleted    Boolean  @default(false)
+
+  role       AccessRole       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission AccessPermission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@index([roleId])
+  @@index([permissionId])
+}
+
+model AccessUserRoleMapping {
+  id        String   @id @default(uuid()) @map("_id")
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+  isDeleted Boolean  @default(false)
+
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role AccessRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([roleId])
+}
+
+// A snapshot is copied onto the Order at checkout, so later edits never mutate
+// past orders.
+model Address {
+  id         String   @id @default(uuid()) @map("_id")
+  userId     String
+  label      String?
+  fullName   String
+  phone      String
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  postalCode String
+  country    String
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 // Stock levels per SKU. `available` is sellable stock; `reserved` is held by

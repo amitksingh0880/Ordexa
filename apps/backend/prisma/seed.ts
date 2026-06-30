@@ -1,5 +1,80 @@
 import "dotenv/config";
 import { prisma } from "../src/lib/prisma";
+import { hashPassword } from "../src/auth/password";
+import { UserRole } from "../src/constants/auth";
+import { syncPermissionCatalog } from "../src/access/service";
+import {
+  DEFAULT_TENANT,
+  SYSTEM_ROLES,
+  ARN_MODULES,
+  ARN_ACTIONS,
+  moduleTemplate,
+} from "../src/constants/arn";
+
+const CUSTOMER_ARNS = [
+  moduleTemplate(ARN_MODULES.orders, ARN_ACTIONS.own),
+  moduleTemplate(ARN_MODULES.payments, ARN_ACTIONS.checkout),
+];
+
+const SEED_USERS = [
+  {
+    email: process.env.SEED_ADMIN_EMAIL ?? "admin@ordexa.shop",
+    password: process.env.SEED_ADMIN_PASSWORD ?? "admin12345",
+    name: "Ordexa Admin",
+    role: UserRole.Admin,
+    roleName: SYSTEM_ROLES.administrator,
+  },
+  {
+    email: process.env.SEED_CUSTOMER_EMAIL ?? "customer@ordexa.shop",
+    password: process.env.SEED_CUSTOMER_PASSWORD ?? "customer12345",
+    name: "Demo Customer",
+    role: UserRole.Customer,
+    roleName: SYSTEM_ROLES.customer,
+  },
+];
+
+async function seedAccessControl() {
+  const tenant = await prisma.tenant.upsert({
+    where: { slug: DEFAULT_TENANT.slug },
+    update: { name: DEFAULT_TENANT.name },
+    create: { slug: DEFAULT_TENANT.slug, name: DEFAULT_TENANT.name },
+  });
+
+  await syncPermissionCatalog();
+
+  const administrator = await prisma.accessRole.upsert({
+    where: { tenantId_roleName: { tenantId: tenant.id, roleName: SYSTEM_ROLES.administrator } },
+    update: { isSuperAdmin: true, isActive: true, isDeleted: false },
+    create: {
+      tenantId: tenant.id,
+      roleName: SYSTEM_ROLES.administrator,
+      description: "Full tenant access",
+      isSuperAdmin: true,
+    },
+  });
+
+  const customer = await prisma.accessRole.upsert({
+    where: { tenantId_roleName: { tenantId: tenant.id, roleName: SYSTEM_ROLES.customer } },
+    update: { isActive: true, isDeleted: false },
+    create: {
+      tenantId: tenant.id,
+      roleName: SYSTEM_ROLES.customer,
+      description: "Storefront shopper",
+    },
+  });
+
+  const customerPerms = await prisma.accessPermission.findMany({
+    where: { resourceArn: { in: CUSTOMER_ARNS } },
+  });
+  await prisma.accessRolePermissionMapping.deleteMany({ where: { roleId: customer.id } });
+  if (customerPerms.length > 0) {
+    await prisma.accessRolePermissionMapping.createMany({
+      data: customerPerms.map((p) => ({ roleId: customer.id, permissionId: p.id })),
+    });
+  }
+
+  return { tenantId: tenant.id, roleByName: { [SYSTEM_ROLES.administrator]: administrator.id, [SYSTEM_ROLES.customer]: customer.id } };
+}
 
 const IMG = "https://lh3.googleusercontent.com/aida-public/";
 const img = (token: string) => `${IMG}${token}`;
@@ -337,6 +412,24 @@ const products = [
 ];
 
 async function main() {
+  const { tenantId, roleByName } = await seedAccessControl();
+
+  for (const u of SEED_USERS) {
+    const passwordHash = await hashPassword(u.password);
+    const user = await prisma.user.upsert({
+      where: { email: u.email },
+      update: { name: u.name, role: u.role, tenantId },
+      create: { email: u.email, name: u.name, role: u.role, tenantId, passwordHash },
+    });
+    const roleId = roleByName[u.roleName];
+    const existing = await prisma.accessUserRoleMapping.findFirst({
+      where: { userId: user.id, roleId },
+    });
+    if (!existing) {
+      await prisma.accessUserRoleMapping.create({ data: { userId: user.id, roleId } });
+    }
+  }
+
   for (const c of collections) {
     await prisma.collection.upsert({
       where: { slug: c.slug },
@@ -360,7 +453,7 @@ async function main() {
       sku: p.slug,
       name: p.name,
       price: p.price,
-      currency: p.currency ?? "USD",
+      currency: (p as { currency?: string }).currency ?? "USD",
       available,
       reserved: index % 4 === 0 ? 2 : 0,
     };
