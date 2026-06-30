@@ -17,6 +17,7 @@ export const ROUTES = {
   reviews: "/reviews",
   messages: "/messages",
   customers: "/customers",
+  coupons: "/coupons",
   access: "/access",
   settings: "/settings",
   login: "/login",
@@ -67,6 +68,12 @@ export const SETTINGS_COPY = {
   test: "Test / Mock",
   freeOver: "Free shipping over",
   methods: "Delivery methods",
+  storefront: "Storefront",
+  saveStorefront: "Save storefront",
+  brand: "Brand name",
+  tagline: "Tagline",
+  currency: "Currency",
+  flatRate: "Flat shipping rate",
 } as const;
 
 export const ACCESS_COPY = {
@@ -106,6 +113,22 @@ export const RESOURCES = {
   inventory: "inventory",
   reviews: "reviews",
   messages: "messages",
+  coupons: "coupons",
+} as const;
+
+export const COUPONS_COPY = {
+  title: "Coupons",
+  newCoupon: "New coupon",
+  code: "Code",
+  type: "Type",
+  value: "Value",
+  minSubtotal: "Min subtotal",
+  active: "Active",
+  delete: "Delete",
+  create: "Create coupon",
+  percent: "Percent",
+  fixed: "Fixed",
+  empty: "No coupons yet.",
 } as const;
 
 export const AUTH_STORAGE_KEY = "ordexa-admin-token";
@@ -128,6 +151,7 @@ export const ARN_MODULES = {
   inventory: "inventory",
   reviews: "reviews",
   messages: "messages",
+  coupons: "coupons",
   accessManagement: "accessmanagement",
 } as const;
 

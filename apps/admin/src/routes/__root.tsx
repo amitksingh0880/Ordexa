@@ -21,6 +21,7 @@ import {
   KeyRound,
   Users,
   Settings,
+  Ticket,
 } from "lucide-react";
 
 import {
@@ -68,6 +69,13 @@ const NAV_ITEMS = [
   { to: ROUTES.reviews, label: "Reviews", icon: Star, badge: RESOURCES.reviews, requires: null },
   { to: ROUTES.messages, label: "Messages", icon: Mail, badge: RESOURCES.messages, requires: null },
   {
+    to: ROUTES.coupons,
+    label: "Coupons",
+    icon: Ticket,
+    badge: null,
+    requires: { module: ARN_MODULES.coupons, action: ARN_ACTIONS.write },
+  },
+  {
     to: ROUTES.customers,
     label: "Customers",
     icon: Users,
@@ -91,6 +99,7 @@ const PAGE_TITLES: Record<string, string> = {
   [ROUTES.products]: "Products",
   [ROUTES.reviews]: "Reviews",
   [ROUTES.messages]: "Messages",
+  [ROUTES.coupons]: "Coupons",
   [ROUTES.customers]: "Customers",
   [ROUTES.access]: "Access Management",
   [ROUTES.settings]: "Settings",

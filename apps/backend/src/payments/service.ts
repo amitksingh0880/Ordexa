@@ -5,6 +5,7 @@ import { razorpay } from "./razorpay";
 import { OrderStatus, PaymentStatus, PAYMENT_METHOD } from "../constants/orders";
 import { fulfillPaidOrder } from "./fulfillment";
 import { computeCouponDiscount } from "./coupon.service";
+import { getStorefrontConfig, type ShippingConfig } from "../tenants/config.service";
 import type { CreatePaymentOrderInput, VerifyPaymentInput } from "./schemas";
 
 export class EmptyCartError extends Error {}
@@ -13,10 +14,12 @@ export class SignatureError extends Error {}
 
 const PAISE = 100;
 
-const resolveShipping = (subtotal: number, methodId: string) => {
+const FALLBACK_METHOD = { id: "standard", label: "Standard", cost: 0, etaDays: 0 };
+
+const resolveShipping = (subtotal: number, methodId: string, shipping: ShippingConfig) => {
   const method =
-    config.shipping.methods.find((m) => m.id === methodId) ?? config.shipping.methods[0];
-  const cost = subtotal >= config.shipping.freeThreshold ? 0 : method.cost;
+    shipping.methods.find((m) => m.id === methodId) ?? shipping.methods[0] ?? FALLBACK_METHOD;
+  const cost = subtotal >= shipping.freeThreshold ? 0 : method.cost;
   return { method, cost };
 };
 
@@ -40,13 +43,14 @@ export const createPaymentOrder = async (
   if (lines.length === 0) throw new EmptyCartError("Cart is empty");
 
   const subtotal = lines.reduce((sum, l) => sum + l.price * l.quantity, 0);
-  const { method, cost } = resolveShipping(subtotal, input.shippingMethodId);
+  const storefront = await getStorefrontConfig(tenantId);
+  const { method, cost } = resolveShipping(subtotal, input.shippingMethodId, storefront.shipping);
   const coupon = input.couponCode
     ? await computeCouponDiscount(tenantId, input.couponCode, subtotal)
     : null;
   const discount = coupon?.valid ? coupon.discount : 0;
   const total = Math.max(0, subtotal + cost - discount);
-  const currency = config.shipping.currency;
+  const currency = storefront.currency;
 
   const order = await prisma.order.create({
     data: {

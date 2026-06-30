@@ -10,6 +10,7 @@ import { Skeleton } from "@ui/components/ui/skeleton";
 import { Stars } from "../../components/shop/Stars";
 import { ProductReviews } from "../../components/shop/ProductReviews";
 import { ProductCard } from "../../components/shop/ProductCard";
+import { WishlistButton } from "../../components/shop/WishlistButton";
 import { cn } from "@ui/lib/utils";
 import { ROUTES } from "../../constants/app";
 import { SHOP, formatPrice } from "../../constants/shop";
@@ -152,12 +153,18 @@ export default function ProductDetailPage({ productId }: { productId: string }) 
           ) : null}
 
           <div className="flex flex-col gap-4 pt-2">
-            <Button
-              onClick={handleAddToBag}
-              className="w-full rounded-none bg-ink py-7 font-body text-label uppercase tracking-[0.2em] text-white hover:bg-ink/80"
-            >
-              {SHOP.product.addToBag}
-            </Button>
+            <div className="flex items-stretch gap-3">
+              <Button
+                onClick={handleAddToBag}
+                className="flex-1 rounded-none bg-ink py-7 font-body text-label uppercase tracking-[0.2em] text-white hover:bg-ink/80"
+              >
+                {SHOP.product.addToBag}
+              </Button>
+              <WishlistButton
+                productSlug={product.slug}
+                className="flex items-center justify-center rounded-none border border-line px-5 hover:border-ink"
+              />
+            </div>
             <Button
               variant="outline"
               className="w-full rounded-none border-line py-7 font-body text-label uppercase tracking-[0.2em] text-ink hover:border-ink hover:bg-transparent"

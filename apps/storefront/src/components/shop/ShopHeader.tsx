@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Menu, Search, ShoppingBag, User } from "lucide-react";
 import { Button } from "@ui/components/ui/button";
 import { Badge } from "@ui/components/ui/badge";
@@ -11,6 +12,7 @@ import {
 } from "@ui/components/ui/sheet";
 import { ROUTES, AUTH_COPY } from "../../constants/app";
 import { SHOP } from "../../constants/shop";
+import { storefrontApi } from "../../lib/storefront";
 import { useCart } from "../../context/cart-context";
 import { useAuth } from "../../context/auth-context";
 
@@ -34,6 +36,8 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 export function ShopHeader() {
   const { count, setOpen } = useCart();
   const { user } = useAuth();
+  const config = useQuery({ queryKey: ["storefront-config"], queryFn: storefrontApi.config });
+  const brand = config.data?.brand ?? SHOP.brand;
 
   return (
     <header className="fixed top-0 z-40 w-full border-b border-line/20 bg-surface/80 shadow-sm backdrop-blur-xl">
@@ -42,7 +46,7 @@ export function ShopHeader() {
           to={ROUTES.shop}
           className="font-display text-h2 font-bold tracking-tighter text-ink"
         >
-          {SHOP.brand}
+          {brand}
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
@@ -93,7 +97,7 @@ export function ShopHeader() {
             <SheetContent side="left" className="bg-page">
               <SheetHeader>
                 <SheetTitle className="font-display text-h2 tracking-tighter text-ink">
-                  {SHOP.brand}
+                  {brand}
                 </SheetTitle>
               </SheetHeader>
               <nav className="flex flex-col gap-4 px-4">

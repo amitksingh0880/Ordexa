@@ -6,6 +6,7 @@ import { requireAuth } from "../auth/middleware";
 import { authorizeArn } from "../auth/authorize";
 import { ARN_MODULES, ARN_ACTIONS } from "../constants/arn";
 import { invalidateTenantCache } from "../access/tenant";
+import { getStorefrontConfig } from "./config.service";
 
 const asyncHandler =
   (fn: (req: Request, res: Response) => Promise<unknown>) =>
@@ -31,6 +32,15 @@ const writeGuard = authorizeArn(ARN_MODULES.tenants, ARN_ACTIONS.write);
 export function createTenantRouter(): Router {
   const router = Router();
 
+  // Public storefront config for the active tenant (branding, shipping, currency).
+  router.get(
+    "/config",
+    asyncHandler(async (req, res) => {
+      if (!req.tenantId) return res.status(400).json({ error: "Tenant not resolved" });
+      res.json({ data: await getStorefrontConfig(req.tenantId) });
+    }),
+  );
+
   // The master list used by tenant pickers — limited fields, any authed user.
   router.get(
     "/",
@@ -55,6 +65,17 @@ export function createTenantRouter(): Router {
       const data = await prisma.tenant.create({ data: toData(parsed.data) as Prisma.TenantCreateInput });
       invalidateTenantCache();
       res.status(201).json({ data });
+    }),
+  );
+
+  router.get(
+    "/:id",
+    requireAuth,
+    writeGuard,
+    asyncHandler(async (req, res) => {
+      const data = await prisma.tenant.findUnique({ where: { id: req.params.id } });
+      if (!data) return res.status(404).json({ error: "Tenant not found" });
+      res.json({ data });
     }),
   );
 

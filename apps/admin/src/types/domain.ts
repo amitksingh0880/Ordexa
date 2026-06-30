@@ -32,11 +32,23 @@ export interface Order {
   shippingAddress?: ShippingAddress | null;
   shippingMethod?: string | null;
   shippingCost?: number | null;
+  couponCode?: string | null;
+  discount?: number | null;
   paymentStatus?: string | null;
   paymentId?: string | null;
   paymentMethod?: string | null;
   createdAt: string;
   updatedAt?: string;
+}
+
+export interface Coupon {
+  id: string;
+  code: string;
+  type: string;
+  value: number;
+  minSubtotal: number;
+  active: boolean;
+  expiresAt?: string | null;
 }
 
 export interface AuthUser {
@@ -54,6 +66,17 @@ export interface TenantOption {
   slug: string;
   name: string;
   isActive: boolean;
+}
+
+export interface TenantConfig {
+  brand?: string;
+  tagline?: string;
+  currency?: string;
+  shipping?: { flatRate?: number; freeThreshold?: number };
+}
+
+export interface Tenant extends TenantOption {
+  config?: TenantConfig | null;
 }
 
 export interface AccessPermission {

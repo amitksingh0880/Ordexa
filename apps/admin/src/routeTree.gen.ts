@@ -17,6 +17,7 @@ import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as CustomersRouteImport } from './routes/customers'
+import { Route as CouponsRouteImport } from './routes/coupons'
 import { Route as AccessRouteImport } from './routes/access'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -60,6 +61,11 @@ const CustomersRoute = CustomersRouteImport.update({
   path: '/customers',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CouponsRoute = CouponsRouteImport.update({
+  id: '/coupons',
+  path: '/coupons',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AccessRoute = AccessRouteImport.update({
   id: '/access',
   path: '/access',
@@ -74,6 +80,7 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/access': typeof AccessRoute
+  '/coupons': typeof CouponsRoute
   '/customers': typeof CustomersRoute
   '/inventory': typeof InventoryRoute
   '/login': typeof LoginRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/access': typeof AccessRoute
+  '/coupons': typeof CouponsRoute
   '/customers': typeof CustomersRoute
   '/inventory': typeof InventoryRoute
   '/login': typeof LoginRoute
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/access': typeof AccessRoute
+  '/coupons': typeof CouponsRoute
   '/customers': typeof CustomersRoute
   '/inventory': typeof InventoryRoute
   '/login': typeof LoginRoute
@@ -113,6 +122,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/access'
+    | '/coupons'
     | '/customers'
     | '/inventory'
     | '/login'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/access'
+    | '/coupons'
     | '/customers'
     | '/inventory'
     | '/login'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/access'
+    | '/coupons'
     | '/customers'
     | '/inventory'
     | '/login'
@@ -150,6 +162,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccessRoute: typeof AccessRoute
+  CouponsRoute: typeof CouponsRoute
   CustomersRoute: typeof CustomersRoute
   InventoryRoute: typeof InventoryRoute
   LoginRoute: typeof LoginRoute
@@ -218,6 +231,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/coupons': {
+      id: '/coupons'
+      path: '/coupons'
+      fullPath: '/coupons'
+      preLoaderRoute: typeof CouponsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/access': {
       id: '/access'
       path: '/access'
@@ -238,6 +258,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccessRoute: AccessRoute,
+  CouponsRoute: CouponsRoute,
   CustomersRoute: CustomersRoute,
   InventoryRoute: InventoryRoute,
   LoginRoute: LoginRoute,

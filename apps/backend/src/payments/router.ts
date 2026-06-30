@@ -12,6 +12,7 @@ import {
   SignatureError,
 } from "./service";
 import { computeCouponDiscount } from "./coupon.service";
+import { getStorefrontConfig } from "../tenants/config.service";
 
 const asyncHandler =
   (fn: (req: Request, res: Response) => Promise<unknown>) =>
@@ -23,21 +24,25 @@ const checkoutGuard = authorizeArn(ARN_MODULES.payments, ARN_ACTIONS.checkout);
 export function createPaymentsRouter(): Router {
   const router = Router();
 
-  router.get("/config", (_req, res) => {
-    res.json({
-      data: {
-        razorpay: {
-          enabled: config.payments.razorpay.enabled,
-          keyId: config.payments.razorpay.enabled ? config.payments.razorpay.keyId : null,
+  router.get(
+    "/config",
+    asyncHandler(async (req, res) => {
+      const storefront = req.tenantId ? await getStorefrontConfig(req.tenantId) : null;
+      res.json({
+        data: {
+          razorpay: {
+            enabled: config.payments.razorpay.enabled,
+            keyId: config.payments.razorpay.enabled ? config.payments.razorpay.keyId : null,
+          },
+          shipping: {
+            currency: storefront?.currency ?? config.shipping.currency,
+            freeThreshold: storefront?.shipping.freeThreshold ?? config.shipping.freeThreshold,
+            methods: storefront?.shipping.methods ?? config.shipping.methods,
+          },
         },
-        shipping: {
-          currency: config.shipping.currency,
-          freeThreshold: config.shipping.freeThreshold,
-          methods: config.shipping.methods,
-        },
-      },
-    });
-  });
+      });
+    }),
+  );
 
   router.post(
     "/razorpay/order",

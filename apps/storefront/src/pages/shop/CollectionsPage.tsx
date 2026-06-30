@@ -14,8 +14,9 @@ import { Skeleton } from "@ui/components/ui/skeleton";
 import { ProductGrid } from "../../components/shop/ProductGrid";
 import { NewsletterForm } from "../../components/shop/NewsletterForm";
 import { cn } from "@ui/lib/utils";
+import { Button } from "@ui/components/ui/button";
 import { SHOP } from "../../constants/shop";
-import { SEARCH_COPY } from "../../constants/app";
+import { SEARCH_COPY, PAGINATION } from "../../constants/app";
 import { products as productsResource, collections as collectionsResource } from "../../lib/resources";
 
 const unique = <T,>(values: T[]): T[] => Array.from(new Set(values));
@@ -32,9 +33,15 @@ function useDebounced<T>(value: T, delay: number): T {
 export default function CollectionsPage() {
   const [query, setQuery] = useState("");
   const search = useDebounced(query, 300);
-  const { data: products, isLoading } = productsResource.useList(
-    search ? { search } : undefined,
-  );
+  const [take, setTake] = useState<number>(PAGINATION.pageSize);
+
+  useEffect(() => setTake(PAGINATION.pageSize), [search]);
+
+  const { data: products, isLoading } = productsResource.useList({
+    ...(search ? { search } : {}),
+    take,
+  });
+  const hasMore = (products?.length ?? 0) >= take;
   const { data: collections } = collectionsResource.useList();
   const header = collections?.[0];
 
@@ -201,6 +208,17 @@ export default function CollectionsPage() {
             emptyMessage={SHOP.collectionsPage.emptyState}
             className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12"
           />
+          {hasMore && !isLoading ? (
+            <div className="mt-12 flex justify-center">
+              <Button
+                variant="outline"
+                onClick={() => setTake((t) => t + PAGINATION.pageSize)}
+                className="rounded-none border-ink px-10 py-6 font-body text-label uppercase tracking-[0.2em]"
+              >
+                {PAGINATION.loadMore}
+              </Button>
+            </div>
+          ) : null}
         </div>
       </section>
 

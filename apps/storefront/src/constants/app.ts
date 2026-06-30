@@ -28,6 +28,10 @@ export const PAYMENT_ENDPOINTS = {
   validateCoupon: "/coupon/validate",
 } as const;
 
+export const STOREFRONT_ENDPOINTS = {
+  config: "/tenants/config",
+} as const;
+
 export const AUTH_ENDPOINTS = {
   login: "/login",
   register: "/register",
@@ -38,6 +42,15 @@ export const AUTH_ENDPOINTS = {
 
 export const RESOURCE_NAMES = {
   addresses: "addresses",
+  wishlist: "wishlist",
+} as const;
+
+export const WISHLIST_COPY = {
+  title: "Wishlist",
+  empty: "Your wishlist is empty.",
+  add: "Add to wishlist",
+  remove: "Remove from wishlist",
+  view: "View",
 } as const;
 
 export const STORAGE_KEYS = {
@@ -74,6 +87,11 @@ export const SEARCH_COPY = {
   placeholder: "Search products",
 } as const;
 
+export const PAGINATION = {
+  pageSize: 12,
+  loadMore: "Load more",
+} as const;
+
 export const CHECKOUT_COPY = {
   signInRequired: "Sign in to check out",
   signInPrompt: "You need an account to place an order and track delivery.",
@@ -82,8 +100,12 @@ export const CHECKOUT_COPY = {
   deliveryMethod: "Delivery method",
   subtotal: "Subtotal",
   shipping: "Shipping",
+  discount: "Discount",
   free: "Free",
   total: "Total",
+  couponPlaceholder: "Promo code",
+  applyCoupon: "Apply",
+  couponApplied: "Code applied",
   continueToAddress: "Continue",
   continueToPay: "Continue to payment",
   back: "Back",

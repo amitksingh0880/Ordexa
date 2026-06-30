@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Plus, MapPin, Trash2, Star } from "lucide-react";
+import { Plus, MapPin, Trash2, Star, Heart } from "lucide-react";
 import { Button } from "@ui/components/ui/button";
 import { Badge } from "@ui/components/ui/badge";
 import { Separator } from "@ui/components/ui/separator";
 import { AutoForm } from "@ui/components/ui/auto-form";
-import { ROUTES, AUTH_COPY, ADDRESS_FIELDS } from "../../constants/app";
+import { ROUTES, AUTH_COPY, ADDRESS_FIELDS, WISHLIST_COPY } from "../../constants/app";
 import { formatPrice } from "../../constants/shop";
 import { addressSchema, type AddressValues } from "../../lib/schemas";
-import { orders, addresses } from "../../lib/resources";
+import { orders, addresses, wishlist } from "../../lib/resources";
 import { useAuth } from "../../context/auth-context";
 
 function AddressBook() {
@@ -127,6 +127,45 @@ function OrderHistory() {
   );
 }
 
+function WishlistSection() {
+  const list = wishlist.useList();
+  const remove = wishlist.useRemove();
+  return (
+    <section className="space-y-4">
+      <h2 className="font-display text-h3 font-bold text-ink">{WISHLIST_COPY.title}</h2>
+      {list.data && list.data.length > 0 ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {list.data.map((w) => (
+            <div key={w.id} className="flex items-center justify-between rounded-md border border-line p-4">
+              <span className="flex items-center gap-2 font-body text-sm text-ink">
+                <Heart className="size-4 fill-current" />
+                {w.productSlug}
+              </span>
+              <div className="flex items-center gap-3">
+                <Button asChild variant="ghost" size="sm">
+                  <Link to={ROUTES.shopProductPattern} params={{ productId: w.productSlug }}>
+                    {WISHLIST_COPY.view}
+                  </Link>
+                </Button>
+                <button
+                  type="button"
+                  className="text-destructive"
+                  aria-label={WISHLIST_COPY.remove}
+                  onClick={() => remove.mutate(w.id)}
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="font-body text-sm text-ink-muted">{WISHLIST_COPY.empty}</p>
+      )}
+    </section>
+  );
+}
+
 export function AccountPage() {
   const { user, loading, logout } = useAuth();
   const navigate = useNavigate();
@@ -157,6 +196,9 @@ export function AccountPage() {
       <Separator className="my-8" />
       <h2 className="mb-4 font-display text-h3 font-bold text-ink">{AUTH_COPY.orderHistory}</h2>
       <OrderHistory />
+
+      <Separator className="my-8" />
+      <WishlistSection />
 
       <Separator className="my-8" />
       <AddressBook />

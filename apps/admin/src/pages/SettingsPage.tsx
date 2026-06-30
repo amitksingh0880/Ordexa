@@ -6,6 +6,7 @@ import { Badge } from "@ui/components/ui/badge";
 import { AutoForm } from "@ui/components/ui/auto-form";
 import { settingsApi } from "../lib/settings";
 import { authApi } from "../lib/auth";
+import { tenantsApi } from "../lib/tenants";
 import { formatCurrency } from "../lib/format";
 import { SETTINGS_COPY } from "../constants/app";
 import { useAuth } from "../context/auth-context";
@@ -15,6 +16,59 @@ const profileSchema = z.object({
   currentPassword: z.string().optional(),
   newPassword: z.string().optional(),
 });
+
+const storefrontSchema = z.object({
+  brand: z.string().min(1),
+  tagline: z.string().optional(),
+  currency: z.string().min(1),
+  flatRate: z.number().min(0),
+  freeThreshold: z.number().min(0),
+});
+
+function StorefrontCard({ tenantId }: { tenantId: string }) {
+  const tenant = useQuery({ queryKey: ["tenant", tenantId], queryFn: () => tenantsApi.get(tenantId) });
+  const cfg = tenant.data?.config ?? {};
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">{SETTINGS_COPY.storefront}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {tenant.data ? (
+          <AutoForm
+            key={tenant.data.id}
+            schema={storefrontSchema}
+            submitText={SETTINGS_COPY.saveStorefront}
+            defaultValues={{
+              brand: cfg.brand ?? tenant.data.name,
+              tagline: cfg.tagline ?? "",
+              currency: cfg.currency ?? "",
+              flatRate: cfg.shipping?.flatRate ?? 0,
+              freeThreshold: cfg.shipping?.freeThreshold ?? 0,
+            }}
+            fieldConfig={{
+              brand: { label: SETTINGS_COPY.brand },
+              tagline: { label: SETTINGS_COPY.tagline },
+              currency: { label: SETTINGS_COPY.currency },
+              flatRate: { label: SETTINGS_COPY.flatRate, type: "number" },
+              freeThreshold: { label: SETTINGS_COPY.freeOver, type: "number" },
+            }}
+            onSubmit={async (v) => {
+              await tenantsApi.updateConfig(tenantId, {
+                brand: v.brand,
+                tagline: v.tagline,
+                currency: v.currency,
+                shipping: { flatRate: v.flatRate, freeThreshold: v.freeThreshold },
+              });
+              toast.success("Storefront updated");
+            }}
+          />
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -82,6 +136,8 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {user ? <StorefrontCard tenantId={user.tenantId} /> : null}
     </div>
   );
 }

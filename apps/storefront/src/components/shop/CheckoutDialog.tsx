@@ -194,6 +194,26 @@ export function CheckoutDialog({
               </Select>
             </div>
 
+            <div className="flex items-center gap-2">
+              <Input
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)}
+                placeholder={CHECKOUT_COPY.couponPlaceholder}
+                className="rounded-none border-0 border-b border-line bg-transparent focus-visible:ring-0"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={applyCoupon}
+                className="rounded-none"
+              >
+                {CHECKOUT_COPY.applyCoupon}
+              </Button>
+            </div>
+            {couponMessage ? (
+              <p className="font-body text-xs text-ink-muted">{couponMessage}</p>
+            ) : null}
+
             <div className="space-y-1 border-y border-line py-3 font-body text-sm">
               <div className="flex justify-between text-ink-soft">
                 <span>{CHECKOUT_COPY.subtotal}</span>
@@ -203,6 +223,12 @@ export function CheckoutDialog({
                 <span>{CHECKOUT_COPY.shipping}</span>
                 <span>{shippingCost === 0 ? CHECKOUT_COPY.free : formatPrice(shippingCost)}</span>
               </div>
+              {discount > 0 ? (
+                <div className="flex justify-between text-ink-soft">
+                  <span>{CHECKOUT_COPY.discount}</span>
+                  <span>−{formatPrice(discount)}</span>
+                </div>
+              ) : null}
               <div className="flex justify-between font-display text-base font-bold text-ink">
                 <span>{CHECKOUT_COPY.total}</span>
                 <span>{formatPrice(total)}</span>
