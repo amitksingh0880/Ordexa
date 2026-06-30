@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { toast } from "sonner";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
-import { cn } from "../../lib/utils";
+import { Input } from "@ui/components/ui/input";
+import { Button } from "@ui/components/ui/button";
+import { cn } from "@ui/lib/utils";
 import { SHOP } from "../../constants/shop";
 import { newsletterSchema } from "../../lib/schemas";
 

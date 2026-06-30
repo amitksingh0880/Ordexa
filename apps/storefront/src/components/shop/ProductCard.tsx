@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { Card } from "../ui/card";
-import { Badge } from "../ui/badge";
+import { Card } from "@ui/components/ui/card";
+import { Badge } from "@ui/components/ui/badge";
 import { ROUTES } from "../../constants/app";
 import { formatPrice } from "../../constants/shop";
 import type { Product } from "../../types/shop";

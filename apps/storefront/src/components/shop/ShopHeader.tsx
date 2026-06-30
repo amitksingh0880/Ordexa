@@ -1,14 +1,14 @@
 import { Link } from "@tanstack/react-router";
 import { Menu, Search, ShoppingBag, User } from "lucide-react";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
+import { Button } from "@ui/components/ui/button";
+import { Badge } from "@ui/components/ui/badge";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "../ui/sheet";
+} from "@ui/components/ui/sheet";
 import { ROUTES } from "../../constants/app";
 import { SHOP } from "../../constants/shop";
 import { useCart } from "../../context/cart-context";

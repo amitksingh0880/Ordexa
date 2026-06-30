@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight, Zap } from "lucide-react";
-import { Button } from "../../components/ui/button";
+import { Button } from "@ui/components/ui/button";
 import { NewsletterForm } from "../../components/shop/NewsletterForm";
 import { ProductGrid } from "../../components/shop/ProductGrid";
 import { ROUTES } from "../../constants/app";

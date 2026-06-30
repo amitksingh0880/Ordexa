@@ -7,9 +7,9 @@ import {
   SheetTitle,
   SheetFooter,
   SheetClose,
-} from "../ui/sheet";
-import { Button } from "../ui/button";
-import { Separator } from "../ui/separator";
+} from "@ui/components/ui/sheet";
+import { Button } from "@ui/components/ui/button";
+import { Separator } from "@ui/components/ui/separator";
 import { QuantityStepper } from "./QuantityStepper";
 import { ROUTES } from "../../constants/app";
 import { SHOP, formatPrice } from "../../constants/shop";
