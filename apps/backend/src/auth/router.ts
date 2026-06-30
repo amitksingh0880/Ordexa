@@ -6,6 +6,7 @@ import { setAuthCookie, clearAuthCookie } from "./cookie";
 import { requireAuth } from "./middleware";
 import { resolveUserAccess } from "../access/service";
 import { resolveTenantId } from "../access/tenant";
+import { routeParam } from "../lib/request";
 import { AUTH_ERRORS, PUBLIC_USER_FIELDS, UserRole } from "../constants/auth";
 import { SYSTEM_ROLES } from "../constants/arn";
 import {
@@ -194,7 +195,7 @@ export function createAuthRouter(): Router {
       const userId = req.user!.id;
 
       const owned = await prisma.address.findFirst({
-        where: { id: req.params.id, userId },
+        where: { id: routeParam(req, "id"), userId },
       });
       if (!owned) return res.status(404).json({ error: "Address not found" });
 
@@ -202,7 +203,7 @@ export function createAuthRouter(): Router {
         await prisma.address.updateMany({ where: { userId }, data: { isDefault: false } });
       }
       const data = await prisma.address.update({
-        where: { id: req.params.id },
+        where: { id: routeParam(req, "id") },
         data: input,
       });
       res.json({ data });
@@ -214,10 +215,10 @@ export function createAuthRouter(): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const owned = await prisma.address.findFirst({
-        where: { id: req.params.id, userId: req.user!.id },
+        where: { id: routeParam(req, "id"), userId: req.user!.id },
       });
       if (!owned) return res.status(404).json({ error: "Address not found" });
-      await prisma.address.delete({ where: { id: req.params.id } });
+      await prisma.address.delete({ where: { id: routeParam(req, "id") } });
       res.status(204).end();
     }),
   );

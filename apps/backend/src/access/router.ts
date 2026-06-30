@@ -12,6 +12,7 @@ import {
   listTenantUsers,
 } from "./service";
 import { syncPermissionCatalog } from "./discovery";
+import { routeParam } from "../lib/request";
 
 const asyncHandler =
   (fn: (req: Request, res: Response) => Promise<unknown>) =>
@@ -68,7 +69,7 @@ export function createAccessRouter(): Router {
 
   router.delete("/roles/:id", rolesGuard, asyncHandler(async (req, res) => {
     await prisma.accessRole.update({
-      where: { id: req.params.id },
+      where: { id: routeParam(req, "id") },
       data: { isDeleted: true, isActive: false },
     });
     res.status(204).end();
@@ -77,7 +78,7 @@ export function createAccessRouter(): Router {
   router.post("/roles/:id/permissions", rolesGuard, asyncHandler(async (req, res) => {
     const parsed = idListSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: "Expected an array of permission ids" });
-    await assignRolePermissions(req.params.id!, parsed.data);
+    await assignRolePermissions(routeParam(req, "id"), parsed.data);
     res.json({ data: { ok: true } });
   }));
 
@@ -88,7 +89,7 @@ export function createAccessRouter(): Router {
   router.post("/users/:id/roles", usersGuard, asyncHandler(async (req, res) => {
     const parsed = idListSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: "Expected an array of role ids" });
-    await assignUserRoles(req.params.id!, parsed.data);
+    await assignUserRoles(routeParam(req, "id"), parsed.data);
     res.json({ data: { ok: true } });
   }));
 

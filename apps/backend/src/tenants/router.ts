@@ -7,6 +7,7 @@ import { authorizeArn } from "../auth/authorize";
 import { ARN_MODULES, ARN_ACTIONS } from "../constants/arn";
 import { invalidateTenantCache } from "../access/tenant";
 import { getStorefrontConfig } from "./config.service";
+import { routeParam } from "../lib/request";
 
 const asyncHandler =
   (fn: (req: Request, res: Response) => Promise<unknown>) =>
@@ -73,7 +74,7 @@ export function createTenantRouter(): Router {
     requireAuth,
     writeGuard,
     asyncHandler(async (req, res) => {
-      const data = await prisma.tenant.findUnique({ where: { id: req.params.id } });
+      const data = await prisma.tenant.findUnique({ where: { id: routeParam(req, "id") } });
       if (!data) return res.status(404).json({ error: "Tenant not found" });
       res.json({ data });
     }),
@@ -86,7 +87,7 @@ export function createTenantRouter(): Router {
     asyncHandler(async (req, res) => {
       const parsed = tenantSchema.partial().safeParse(req.body);
       if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
-      const data = await prisma.tenant.update({ where: { id: req.params.id }, data: toData(parsed.data) });
+      const data = await prisma.tenant.update({ where: { id: routeParam(req, "id") }, data: toData(parsed.data) });
       invalidateTenantCache();
       res.json({ data });
     }),
