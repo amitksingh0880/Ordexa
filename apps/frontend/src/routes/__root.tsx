@@ -18,6 +18,7 @@ import {
   LogOut,
   ShieldCheck,
   Loader2,
+  KeyRound,
 } from "lucide-react";
 
 import {
@@ -42,6 +43,8 @@ import {
   APP,
   ROUTES,
   RESOURCES,
+  ARN_MODULES,
+  ARN_ACTIONS,
   ORDER_STATUS,
   REVIEW_STATUS,
   MESSAGE_STATUS,
@@ -55,12 +58,19 @@ export const Route = createRootRoute({
 });
 
 const NAV_ITEMS = [
-  { to: ROUTES.dashboard, label: "Dashboard", icon: LayoutDashboard, badge: null },
-  { to: ROUTES.orders, label: "Orders", icon: ShoppingBag, badge: RESOURCES.orders },
-  { to: ROUTES.inventory, label: "Inventory", icon: Boxes, badge: null },
-  { to: ROUTES.products, label: "Products", icon: Package, badge: null },
-  { to: ROUTES.reviews, label: "Reviews", icon: Star, badge: RESOURCES.reviews },
-  { to: ROUTES.messages, label: "Messages", icon: Mail, badge: RESOURCES.messages },
+  { to: ROUTES.dashboard, label: "Dashboard", icon: LayoutDashboard, badge: null, requires: null },
+  { to: ROUTES.orders, label: "Orders", icon: ShoppingBag, badge: RESOURCES.orders, requires: null },
+  { to: ROUTES.inventory, label: "Inventory", icon: Boxes, badge: null, requires: null },
+  { to: ROUTES.products, label: "Products", icon: Package, badge: null, requires: null },
+  { to: ROUTES.reviews, label: "Reviews", icon: Star, badge: RESOURCES.reviews, requires: null },
+  { to: ROUTES.messages, label: "Messages", icon: Mail, badge: RESOURCES.messages, requires: null },
+  {
+    to: ROUTES.access,
+    label: "Access",
+    icon: KeyRound,
+    badge: null,
+    requires: { module: ARN_MODULES.accessManagement, action: ARN_ACTIONS.roles },
+  },
 ] as const;
 
 const PAGE_TITLES: Record<string, string> = {
@@ -70,6 +80,7 @@ const PAGE_TITLES: Record<string, string> = {
   [ROUTES.products]: "Products",
   [ROUTES.reviews]: "Reviews",
   [ROUTES.messages]: "Messages",
+  [ROUTES.access]: "Access Management",
 };
 
 function useTheme() {
@@ -123,9 +134,13 @@ export function RootLayout() {
 function AdminShell() {
   const { pathname } = useLocation();
   const { dark, toggle } = useTheme();
-  const { user, logout } = useAuth();
+  const { user, logout, can } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const navItems = NAV_ITEMS.filter(
+    (item) => !item.requires || can(item.requires.module, item.requires.action),
+  );
 
   const onLogout = async () => {
     await logout();
@@ -173,7 +188,7 @@ function AdminShell() {
             <SidebarGroupLabel>Management</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {NAV_ITEMS.map((item) => {
+                {navItems.map((item) => {
                   const count = item.badge ? badgeCounts[item.badge] : undefined;
                   const isActive =
                     item.to === ROUTES.dashboard
