@@ -87,7 +87,7 @@ export function CartSheet() {
               ))}
             </div>
 
-            <SheetFooter className="gap-4 border-t border-line/20 bg-white/40 px-6 py-6">
+            <SheetFooter className="gap-4 border-t border-line/20 bg-surface-low px-6 py-6">
               <div className="space-y-2">
                 <div className="flex justify-between font-body text-sm">
                   <span className="text-ink-soft">{SHOP.cart.subtotal}</span>
@@ -108,7 +108,7 @@ export function CartSheet() {
                 </div>
               </div>
               <Button
-                className="w-full rounded-full bg-ink py-6 font-body text-label uppercase tracking-[0.15em] text-white shadow-lg hover:bg-ink/90"
+                className="w-full rounded-none bg-ink py-7 font-body text-label uppercase tracking-[0.2em] text-white shadow-lg hover:bg-ink/80"
                 onClick={() => {
                   toast.success(SHOP.cart.checkoutSuccess);
                   clear();

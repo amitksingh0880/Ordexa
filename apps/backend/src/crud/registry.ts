@@ -38,6 +38,31 @@ export const RESOURCES: Record<string, CrudResource> = {
     filterFields: ["cartId", "productSlug", "finish"],
     defaultOrderBy: { createdAt: "asc" },
   },
+  orders: {
+    model: prisma.order as unknown as ModelDelegate,
+    searchFields: ["customerName", "customerEmail", "userId", "status"],
+    filterFields: ["status", "userId"],
+    defaultOrderBy: { createdAt: "desc" },
+  },
+  inventory: {
+    model: prisma.inventory as unknown as ModelDelegate,
+    searchFields: ["name", "sku"],
+    filterFields: ["sku"],
+    lookupField: "sku",
+    defaultOrderBy: { sku: "asc" },
+  },
+  reviews: {
+    model: prisma.review as unknown as ModelDelegate,
+    searchFields: ["author", "title", "body", "productSlug"],
+    filterFields: ["productSlug", "status"],
+    defaultOrderBy: { createdAt: "desc" },
+  },
+  messages: {
+    model: prisma.message as unknown as ModelDelegate,
+    searchFields: ["name", "email", "subject", "body"],
+    filterFields: ["status"],
+    defaultOrderBy: { createdAt: "desc" },
+  },
 };
 
 export type ResourceName = keyof typeof RESOURCES;

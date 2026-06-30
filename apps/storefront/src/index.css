@@ -119,6 +119,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
@@ -144,24 +145,24 @@
   --font-display: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-body: "Work Sans", ui-sans-serif, system-ui, sans-serif;
 
-  --text-display: 140px;
+  --text-display: clamp(48px, 5.6vw, 88px);
   --text-display--line-height: 0.85;
-  --text-display--letter-spacing: -0.06em;
+  --text-display--letter-spacing: -0.05em;
   --text-display--font-weight: 600;
 
-  --text-headline: 96px;
-  --text-headline--line-height: 0.95;
-  --text-headline--letter-spacing: -0.05em;
+  --text-headline: clamp(44px, 5.5vw, 80px);
+  --text-headline--line-height: 0.98;
+  --text-headline--letter-spacing: -0.04em;
   --text-headline--font-weight: 600;
 
-  --text-headline-sm: 56px;
-  --text-headline-sm--line-height: 1;
-  --text-headline-sm--letter-spacing: -0.04em;
+  --text-headline-sm: clamp(44px, 5.5vw, 80px);
+  --text-headline-sm--line-height: 1.02;
+  --text-headline-sm--letter-spacing: -0.03em;
   --text-headline-sm--font-weight: 600;
 
-  --text-h2: 36px;
-  --text-h2--line-height: 1.1;
-  --text-h2--letter-spacing: -0.03em;
+  --text-h2: clamp(26px, 3vw, 34px);
+  --text-h2--line-height: 1.15;
+  --text-h2--letter-spacing: -0.02em;
   --text-h2--font-weight: 500;
 
   --text-body-lg: 18px;
@@ -181,33 +182,40 @@
     -webkit-backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.8);
   }
+
   .glass-panel {
     background: rgba(250, 249, 245, 0.7);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
   }
+
   .dark-glass {
     background: rgba(10, 10, 10, 0.4);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
+
   .text-outline {
-    -webkit-text-stroke: 1px currentColor;
+    -webkit-text-stroke: 1.5px currentColor;
     color: transparent;
   }
+
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
   .fade-in-up {
     animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     opacity: 0;
     transform: translateY(30px);
   }
+
   .hero-dots {
     background-image: radial-gradient(circle, rgba(10, 10, 10, 0.16) 1.3px, transparent 1.3px);
     background-size: 30px 30px;
@@ -217,10 +225,22 @@
     -webkit-mask-image: radial-gradient(ellipse at center, #000 35%, transparent 78%);
     mask-image: radial-gradient(ellipse at center, #000 35%, transparent 78%);
   }
-  .delay-100 { animation-delay: 100ms; }
-  .delay-200 { animation-delay: 200ms; }
-  .delay-300 { animation-delay: 300ms; }
-  .delay-400 { animation-delay: 400ms; }
+
+  .delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .delay-400 {
+    animation-delay: 400ms;
+  }
 }
 
 @keyframes fadeInUp {
@@ -231,7 +251,18 @@
 }
 
 @keyframes heroDots {
-  0%   { background-size: 28px 28px; background-position: 0 0; }
-  50%  { background-size: 38px 38px; background-position: 10px -10px; }
-  100% { background-size: 28px 28px; background-position: 0 0; }
+  0% {
+    background-size: 28px 28px;
+    background-position: 0 0;
+  }
+
+  50% {
+    background-size: 38px 38px;
+    background-position: 10px -10px;
+  }
+
+  100% {
+    background-size: 28px 28px;
+    background-position: 0 0;
+  }
 }

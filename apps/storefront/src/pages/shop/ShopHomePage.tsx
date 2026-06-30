@@ -14,7 +14,7 @@ export default function ShopHomePage() {
 
   return (
     <>
-      <section className="group relative mx-auto flex h-screen max-w-[1800px] flex-col justify-center overflow-hidden px-6 pt-20 md:px-12">
+      <section className="group relative mx-auto flex min-h-screen max-w-[1800px] flex-col justify-center overflow-hidden px-6 py-0 md:px-12">
         <div
           aria-hidden
           className="hero-dots pointer-events-none absolute inset-0 transition-transform duration-700 group-hover:scale-125"
@@ -25,15 +25,15 @@ export default function ShopHomePage() {
               {hero.eyebrow}
             </span>
           </div>
-          <h1 className="fade-in-up delay-100 select-none font-display text-headline-sm uppercase leading-none text-ink md:text-display">
+          <h1 className="fade-in-up delay-100 select-none font-display text-headline-sm uppercase leading-[0.85] text-ink md:text-display">
             {hero.titleTop}
             <br />
-            <span className="text-outline font-light italic">{hero.titleBottom}</span>
+            <span className="text-outline italic">{hero.titleBottom}</span>
           </h1>
-          <p className="fade-in-up delay-200 mt-8 max-w-xl font-body text-body-lg font-light text-ink-soft">
+          <p className="fade-in-up delay-200 mt-6 max-w-xl font-body text-body-lg font-light text-ink-soft">
             {hero.body}
           </p>
-          <div className="fade-in-up delay-300 mt-12 flex flex-col gap-4 sm:flex-row">
+          <div className="fade-in-up delay-300 mt-8 flex flex-col gap-4 sm:flex-row">
             <Button
               asChild
               className="rounded-none bg-ink px-10 py-6 font-body text-label uppercase tracking-[0.2em] text-white hover:bg-ink/80"

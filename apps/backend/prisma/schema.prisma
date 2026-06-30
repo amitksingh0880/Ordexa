@@ -9,19 +9,22 @@ datasource db {
 }
 
 model Order {
-  id           String        @id @default(uuid()) @map("_id")
-  userId       String
-  status       String
-  totalAmount  Float
-  currency     String        @default("USD") // default currency
-  description  String?       // optional order notes
-  sku          String        @default("DEMO-SKU") // inventory item ordered
-  quantity     Int           @default(1)           // units requested
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  deletedAt    DateTime?     // for soft delete
+  id            String        @id @default(uuid()) @map("_id")
+  userId        String
+  status        String
+  totalAmount   Float
+  currency      String        @default("USD")
+  description   String?
+  customerName  String?
+  customerEmail String?
+  items         Json?         // snapshot of cart lines [{ productSlug, name, price, finish, quantity }]
+  sku           String        @default("DEMO-SKU")
+  quantity      Int           @default(1)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
 
-  outboxEvents OutboxEvent[] // relation: one order -> many events
+  outboxEvents  OutboxEvent[]
 
   @@index([userId])
   @@index([status])
@@ -142,5 +145,35 @@ model CartItem {
   updatedAt   DateTime @updatedAt
 
   @@index([cartId])
+}
+
+// A customer product review, moderated from the admin dashboard.
+model Review {
+  id          String   @id @default(uuid()) @map("_id")
+  productSlug String
+  author      String
+  rating      Int
+  title       String?
+  body        String
+  status      String   @default("Pending") // Pending | Published | Rejected
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([productSlug])
+  @@index([status])
+}
+
+// A customer enquiry from the storefront contact form, triaged in the admin inbox.
+model Message {
+  id        String   @id @default(uuid()) @map("_id")
+  name      String
+  email     String
+  subject   String?
+  body      String
+  status    String   @default("Unread") // Unread | Read | Archived
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
 }
 

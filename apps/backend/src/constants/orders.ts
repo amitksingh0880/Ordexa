@@ -7,9 +7,22 @@
 export const OrderStatus = {
   Pending: "Pending",
   Confirmed: "Confirmed",
+  Shipped: "Shipped",
+  Delivered: "Delivered",
+  Cancelled: "Cancelled",
   Failed: "Failed",
 } as const;
 export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus];
+
+// Allowed admin status transitions (drives accept/reject/ship/deliver actions).
+export const ORDER_TRANSITIONS: Record<string, OrderStatus[]> = {
+  [OrderStatus.Pending]: [OrderStatus.Confirmed, OrderStatus.Cancelled],
+  [OrderStatus.Confirmed]: [OrderStatus.Shipped, OrderStatus.Cancelled],
+  [OrderStatus.Shipped]: [OrderStatus.Delivered],
+  [OrderStatus.Delivered]: [],
+  [OrderStatus.Cancelled]: [],
+  [OrderStatus.Failed]: [],
+};
 
 export const ReservationStatus = {
   Reserved: "RESERVED",

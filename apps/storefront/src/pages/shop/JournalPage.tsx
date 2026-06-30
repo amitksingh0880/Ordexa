@@ -10,7 +10,7 @@ export default function JournalPage() {
         <span className="mb-4 block font-body text-label uppercase tracking-[0.2em] text-ink-muted">
           {journal.eyebrow}
         </span>
-        <h1 className="font-display text-headline-sm tracking-tight text-ink md:text-headline">
+        <h1 className="font-display text-headline-sm font-light tracking-tight text-ink md:text-headline">
           {journal.title}
         </h1>
         <p className="mt-6 font-body text-body-lg font-light text-ink-soft">
@@ -21,7 +21,7 @@ export default function JournalPage() {
       <div className="mt-16 grid grid-cols-1 gap-x-8 gap-y-16 md:grid-cols-2 lg:grid-cols-3">
         {journal.entries.map((entry) => (
           <article key={entry.title} className="group flex flex-col gap-5">
-            <div className="aspect-[4/3] overflow-hidden rounded-2xl bg-soft">
+            <div className="aspect-[4/3] overflow-hidden bg-surface-container">
               <img
                 src={entry.image}
                 alt={entry.title}

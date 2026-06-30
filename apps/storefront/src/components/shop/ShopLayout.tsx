@@ -7,7 +7,7 @@ import { CartSheet } from "./CartSheet";
 export function ShopLayout() {
   return (
     <CartProvider>
-      <div className="flex min-h-screen flex-col bg-page font-body text-ink">
+      <div className="flex min-h-screen flex-col overflow-x-hidden bg-page font-body text-ink">
         <ShopHeader />
         <main className="flex-1 pt-20">
           <Outlet />
