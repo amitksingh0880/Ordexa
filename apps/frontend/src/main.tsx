@@ -1,4 +1,5 @@
-import "@fontsource/geist-mono/index.css"; 
+import "@fontsource/geist-mono/index.css";
+import "./index.css";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { RouterProvider, createRouter } from "@tanstack/react-router";

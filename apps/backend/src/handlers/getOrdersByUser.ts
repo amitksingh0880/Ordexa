@@ -1,42 +1,40 @@
+import type { Request, Response } from "express";
+import type { Handler } from "openapi-backend";
+import { prisma } from "../lib/prisma";
+import { ORDERS_QUERY } from "../constants/orders";
 
-import { SELECT_ORDERS_BY_USER } from '../cassandra/queries';
-import type { Request, Response } from 'express';
-import { cassandraClient } from '../kafka/utils/cassandra';
+// Read side served directly from database. Path params come from the openapi-backend
+// context — express req.params is empty under the catch-all route.
+export const getOrdersByUserHandler: Handler = async (c, _req: Request, res: Response) => {
+  const userId = c.request.params.userId as string;
+  const limit = Math.min(
+    ORDERS_QUERY.maxLimit,
+    Number(c.request.query.limit ?? ORDERS_QUERY.defaultLimit),
+  );
 
-export async function getOrdersByUserHandler(ctx: any) {
-  const { request, response } = ctx;
-  const userId = ctx.request.params.userId;
-  const limit = Math.min(100, Number(ctx.request.query.limit ?? 25));
-  const pagingState = ctx.request.query.pagingState;
-
-  if (!userId || typeof userId !== 'string') {
-    return { status: 400, body: { error: 'Invalid userId' } };
+  if (!userId || typeof userId !== "string") {
+    return res.status(400).json({ error: "Invalid userId" });
   }
 
   try {
-    await cassandraClient.connect();
+    const rows = await prisma.order.findMany({
+      where: { userId, deletedAt: null },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+    });
 
-    const queryOptions: any = { prepare: true, fetchSize: limit };
-    if (pagingState) queryOptions.pageState = Buffer.from(pagingState, 'base64');
-
-    const result = await cassandraClient.execute(SELECT_ORDERS_BY_USER, [userId], queryOptions);
-
-    const nextPagingState = result.pageState ? Buffer.from(result.pageState).toString('base64') : undefined;
-
-    const orders = result.rows.map(r => ({
-      orderId: r.order_id?.toString(),
-      userId: r.user_id,
-      status: r.status,
-      totalAmount: r.total_amount,
-      createdAt: r.created_at,
+    const orders = rows.map((o) => ({
+      orderId: o.id,
+      userId: o.userId,
+      status: o.status,
+      totalAmount: Number(o.totalAmount),
+      description: o.description ?? undefined,
+      createdAt: o.createdAt,
     }));
 
-    return {
-      status: 200,
-      body: { orders, pagingState: nextPagingState, limit },
-    };
+    return res.status(200).json({ orders, limit });
   } catch (err) {
-    console.error('Cassandra read error', err);
-    return { status: 500, body: { error: 'Internal Server Error' } };
+    console.error("Database read error", err);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
-}
+};

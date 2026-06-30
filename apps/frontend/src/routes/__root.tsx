@@ -1,138 +1,16 @@
-// // src/routes/__root.tsx
-// import { Outlet, Link, useNavigate } from '@tanstack/react-router';
-// import { createRootRoute } from '@tanstack/react-router';
-// import { useEffect, useState } from 'react';
-// import { v4 as uuidv4 } from 'uuid';
-
-
-// import { toast } from 'sonner';
-// import { Label } from '../components/ui/label';
-// import { Input } from '../components/ui/input';
-// import { Button } from '../components/ui/button';
-// import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
-
-// export const Route = createRootRoute({
-//   component: RootLayout,
-// });
-
-// const STORAGE_KEY = 'ordexa-user-id-history';
-
-// function RootLayout() {
-//   const navigate = useNavigate();
-//   const [userId, setUserId] = useState('');
-//   const [error, setError] = useState('');
-//   const [history, setHistory] = useState<string[]>([]);
-
-//   useEffect(() => {
-//     const stored = localStorage.getItem(STORAGE_KEY);
-//     if (stored) setHistory(JSON.parse(stored));
-
-//     const lastUsed = localStorage.getItem('ordexa-user-id');
-//     if (lastUsed) setUserId(lastUsed);
-//   }, []);
-
-//   useEffect(() => {
-//     if (userId) {
-//       localStorage.setItem('ordexa-user-id', userId);
-//     }
-//   }, [userId]);
-
-//   const saveToHistory = (id: string) => {
-//     const updated = [id, ...history.filter((u) => u !== id)].slice(0, 5); // max 5
-//     setHistory(updated);
-//     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-//   };
-
-//   const handleGoToOrders = () => {
-//     if (!userId.trim()) {
-//       setError('Please enter a valid User ID');
-//       return;
-//     }
-//     setError('');
-//     saveToHistory(userId);
-//     navigate({ to: `/orders/${userId}` });
-//   };
-
-//   const handleGenerateUUID = () => {
-//     const newId = uuidv4();
-//     setUserId(newId);
-//     toast.success('✅ UUID generated');
-//   };
-
-//   const handleCopy = async () => {
-//     try {
-//       await navigator.clipboard.writeText(userId);
-//       toast.success('📋 Copied User ID to clipboard');
-//     } catch {
-//       toast.error('❌ Failed to copy');
-//     }
-//   };
-
-//   return (
-//     <div className="p-6 space-y-6">
-//       <nav className="flex flex-wrap items-end gap-4 mb-6">
-//         {/* <Link to="/" className="text-blue-600 underline font-medium">
-//           Home
-//         </Link> */}
-//         <Link to="/orders/create" className="text-blue-600 underline font-medium">
-//           Create Order
-//         </Link>
-
-//         {/* User ID Tools */}
-//         <div className="flex flex-col gap-2">
-//           <Label htmlFor="userId" className="text-sm font-medium">
-//             User ID
-//           </Label>
-
-//           <div className="flex gap-2">
-//             <Input
-//               id="userId"
-//               placeholder="Enter or generate a User ID"
-//               value={userId}
-//               onChange={(e) => setUserId(e.target.value)}
-//               className="w-[300px]"
-//             />
-
-//             <Button variant="default" onClick={handleGoToOrders}>
-//               View Orders
-//             </Button>
-
-//             <Button variant="outline" onClick={handleGenerateUUID}>
-//               🔁 Generate
-//             </Button>
-
-//             <Button variant="secondary" onClick={handleCopy}>
-//               📋 Copy
-//             </Button>
-
-//             {history.length > 0 && (
-//               <DropdownMenu>
-//                 <DropdownMenuTrigger asChild>
-//                   <Button variant="ghost">⏷ Recent</Button>
-//                 </DropdownMenuTrigger>
-//                 <DropdownMenuContent>
-//                   {history.map((id) => (
-//                     <DropdownMenuItem key={id} onClick={() => setUserId(id)}>
-//                       {id.slice(0, 30)}...
-//                     </DropdownMenuItem>
-//                   ))}
-//                 </DropdownMenuContent>
-//               </DropdownMenu>
-//             )}
-//           </div>
-
-//           {error && <p className="text-sm text-red-600">{error}</p>}
-//         </div>
-//       </nav>
-
-//       <Outlet />
-//     </div>
-//   );
-// }
-
-
-
 // src/routes/__root.tsx
+import {
+  Outlet,
+  Link,
+  useNavigate,
+  useLocation,
+  createRootRoute,
+} from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { toast } from "sonner";
+import { LayoutDashboard, ShoppingCart, Boxes, RefreshCw, Copy, ChevronDown } from "lucide-react";
+
 import {
   SidebarProvider,
   Sidebar,
@@ -151,44 +29,51 @@ import {
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../components/ui/dropdown-menu";
-
-import { Outlet, Link, useNavigate, createRootRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
-import { toast } from "sonner";
-import { Home, ShoppingCart, Network } from "lucide-react";
-
-const STORAGE_KEY = "ordexa-user-id-history";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu";
+import {
+  APP,
+  ROUTES,
+  STORAGE_KEYS,
+  USER_ID_HISTORY_LIMIT,
+} from "../constants/app";
 
 export const Route = createRootRoute({
   component: RootLayout,
 });
 
+const NAV_ITEMS = [
+  { to: ROUTES.dashboard, label: "Dashboard", icon: LayoutDashboard },
+  { to: ROUTES.createOrder, label: "Create Order", icon: ShoppingCart },
+  { to: ROUTES.inventory, label: "Inventory", icon: Boxes },
+] as const;
+
 export function RootLayout() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [userId, setUserId] = useState("");
   const [error, setError] = useState("");
   const [history, setHistory] = useState<string[]>([]);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(STORAGE_KEYS.userIdHistory);
     if (stored) setHistory(JSON.parse(stored));
-
-    const lastUsed = localStorage.getItem("ordexa-user-id");
+    const lastUsed = localStorage.getItem(STORAGE_KEYS.lastUserId);
     if (lastUsed) setUserId(lastUsed);
   }, []);
 
   useEffect(() => {
-    if (userId) {
-      localStorage.setItem("ordexa-user-id", userId);
-    }
+    if (userId) localStorage.setItem(STORAGE_KEYS.lastUserId, userId);
   }, [userId]);
 
   const saveToHistory = (id: string) => {
-    const updated = [id, ...history.filter((u) => u !== id)].slice(0, 5);
+    const updated = [id, ...history.filter((u) => u !== id)].slice(0, USER_ID_HISTORY_LIMIT);
     setHistory(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    localStorage.setItem(STORAGE_KEYS.userIdHistory, JSON.stringify(updated));
   };
 
   const handleGoToOrders = () => {
@@ -198,21 +83,20 @@ export function RootLayout() {
     }
     setError("");
     saveToHistory(userId);
-    navigate({ to: `/orders/${userId}` });
+    navigate({ to: ROUTES.ordersByUser(userId) });
   };
 
   const handleGenerateUUID = () => {
-    const newId = uuidv4();
-    setUserId(newId);
-    toast.success("✅ UUID generated");
+    setUserId(uuidv4());
+    toast.success("UUID generated");
   };
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(userId);
-      toast.success("📋 Copied User ID to clipboard");
+      toast.success("Copied User ID to clipboard");
     } catch {
-      toast.error("❌ Failed to copy");
+      toast.error("Failed to copy");
     }
   };
 
@@ -221,36 +105,25 @@ export function RootLayout() {
       <Sidebar>
         <SidebarContent>
           <SidebarHeader>
-            <SidebarTrigger />
+            <div className="flex items-center justify-between px-1">
+              <span className="font-semibold">{APP.name}</span>
+              <SidebarTrigger />
+            </div>
           </SidebarHeader>
 
           <SidebarGroup>
             <SidebarGroupLabel>Navigation</SidebarGroupLabel>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <Link to="/">
-                  <SidebarMenuButton isActive={location.pathname === "/"}>
-                    <Home className="h-4 w-4" />
-                    <span>Home</span>
+              {NAV_ITEMS.map((item) => (
+                <SidebarMenuItem key={item.to}>
+                  <SidebarMenuButton asChild isActive={pathname === item.to}>
+                    <Link to={item.to}>
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.label}</span>
+                    </Link>
                   </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <Link to="/orders/create">
-                  <SidebarMenuButton isActive={location.pathname === "/orders/create"}>
-                    <ShoppingCart className="h-4 w-4" />
-                    <span>Create Order</span>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <Link to="/saga">
-                  <SidebarMenuButton isActive={location.pathname === "/saga"}>
-                    <Network className="h-4 w-4" />
-                    <span>Saga Dashboard</span>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroup>
 
@@ -260,7 +133,6 @@ export function RootLayout() {
             <Label htmlFor="userId" className="text-sm font-medium">
               User ID
             </Label>
-
             <Input
               id="userId"
               placeholder="Enter or generate a User ID"
@@ -268,35 +140,34 @@ export function RootLayout() {
               onChange={(e) => setUserId(e.target.value)}
               className="mb-2"
             />
-
             <div className="flex gap-2">
               <Button size="sm" onClick={handleGoToOrders}>
                 View Orders
               </Button>
-              <Button size="sm" variant="outline" onClick={handleGenerateUUID}>
-                🔁
+              <Button size="sm" variant="outline" onClick={handleGenerateUUID} aria-label="Generate UUID">
+                <RefreshCw />
               </Button>
-              <Button size="sm" variant="ghost" onClick={handleCopy}>
-                📋
+              <Button size="sm" variant="ghost" onClick={handleCopy} aria-label="Copy User ID">
+                <Copy />
               </Button>
-
               {history.length > 0 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button size="sm" variant="ghost">⏷</Button>
+                    <Button size="sm" variant="ghost" aria-label="Recent User IDs">
+                      <ChevronDown />
+                    </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
                     {history.map((id) => (
-                      <DropdownMenuItem key={id} onClick={() => setUserId(id)}>
-                        {id.slice(0, 24)}...
+                      <DropdownMenuItem key={id} onClick={() => setUserId(id)} className="font-mono">
+                        {id.slice(0, 24)}…
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
             </div>
-
-            {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+            {error && <p className="text-destructive mt-1 text-xs">{error}</p>}
           </SidebarFooter>
         </SidebarContent>
       </Sidebar>
