@@ -1,5 +1,5 @@
 import { Minus, Plus } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "@ui/components/ui/button";
 
 interface QuantityStepperProps {
   value: number;

@@ -1,18 +1,18 @@
 import { useMemo, useState } from "react";
 import { ArrowRight } from "lucide-react";
-import { Checkbox } from "../../components/ui/checkbox";
-import { Separator } from "../../components/ui/separator";
+import { Checkbox } from "@ui/components/ui/checkbox";
+import { Separator } from "@ui/components/ui/separator";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../components/ui/select";
-import { Skeleton } from "../../components/ui/skeleton";
+} from "@ui/components/ui/select";
+import { Skeleton } from "@ui/components/ui/skeleton";
 import { ProductGrid } from "../../components/shop/ProductGrid";
 import { NewsletterForm } from "../../components/shop/NewsletterForm";
-import { cn } from "../../lib/utils";
+import { cn } from "@ui/lib/utils";
 import { SHOP } from "../../constants/shop";
 import { products as productsResource, collections as collectionsResource } from "../../lib/resources";
 

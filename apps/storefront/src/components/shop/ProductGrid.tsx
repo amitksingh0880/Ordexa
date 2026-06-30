@@ -1,6 +1,6 @@
-import { Skeleton } from "../ui/skeleton";
+import { Skeleton } from "@ui/components/ui/skeleton";
 import { ProductCard } from "./ProductCard";
-import { cn } from "../../lib/utils";
+import { cn } from "@ui/lib/utils";
 import type { Product } from "../../types/shop";
 
 interface ProductGridProps {
