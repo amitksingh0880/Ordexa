@@ -7,6 +7,7 @@ import { OpenAPIBackend, type Request as OpenAPIRequest } from "openapi-backend"
 import { createOrderHandler } from "./handlers/order";
 import { getOrdersByUserHandler } from "./handlers/getOrdersByUser";
 import { getInventoryHandler } from "./handlers/getInventory";
+import { createCrudRouter } from "./crud/router";
 import cors from "cors";
 
 // Node ESM ("type": "module") has no __dirname; derive it from import.meta.url.
@@ -72,6 +73,9 @@ app.use((req, res, next) => {
     next();
   });
 });
+
+// Storefront catalog CRUD — mounted before the OpenAPI catch-all.
+app.use("/api", createCrudRouter());
 
 // Error handling middleware (to trace uncaught errors)
 interface ErrorHandlerRequest extends express.Request {}

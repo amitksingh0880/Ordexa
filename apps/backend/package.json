@@ -11,6 +11,7 @@
     "generate:types": "openapi-typescript ./spec/index.yml --output ./src/types/api.d.ts",
     "test": "bun test",
     "db:reset": "prisma db push --force-reset && prisma generate",
+    "db:seed": "tsx prisma/seed.ts",
     "check:db": "tsx scripts/dev/checks/checkDb.ts"
   },
   "engines": {

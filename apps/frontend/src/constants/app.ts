@@ -14,6 +14,14 @@ export const ROUTES = {
   createOrder: "/orders/create",
   inventory: "/inventory",
   ordersByUser: (userId: string) => `/orders/${userId}`,
+  shop: "/shop",
+  shopCollections: "/shop/collections",
+  shopProduct: (slug: string) => `/shop/products/${slug}`,
+} as const;
+
+// Prefix under which the backend exposes the generic CRUD resources.
+export const API = {
+  crudBasePath: "/api",
 } as const;
 
 // Backend API paths (joined to VITE_API_URL by the api client).
@@ -59,6 +67,12 @@ export const ORDER_DEFAULTS = {
   quantity: 1,
   status: "Created",
 } as const;
+
+export const PRODUCT_PRICES: Record<string, number> = {
+  "DEMO-SKU": 120.50,
+  "WIDGET-PRO": 299.99,
+  "WIDGET-LITE": 49.99,
+};
 
 export const CURRENCY = {
   locale: "en-IN",
