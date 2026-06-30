@@ -38,7 +38,8 @@ export function createProductImportRouter(): Router {
     upload.single("file") as unknown as RequestHandler,
     asyncHandler(async (req, res) => {
       if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-      const results = await importProducts(req.file.buffer);
+      if (!req.tenantId) return res.status(400).json({ error: "Tenant not resolved" });
+      const results = await importProducts(req.file.buffer, req.tenantId);
       const summary = {
         created: results.filter((r) => r.status === "created").length,
         updated: results.filter((r) => r.status === "updated").length,

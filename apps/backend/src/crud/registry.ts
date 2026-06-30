@@ -35,6 +35,7 @@ export interface CrudResource {
   policy: CrudPolicy;
   protectedFields?: string[]; // stripped unless the caller holds module:write
   hooks?: { afterUpdate?: (updated: unknown) => Promise<void> | void };
+  tenantScoped?: boolean; // default true: rows carry tenantId and are isolated per tenant
 }
 
 const pub: CrudAccess = { kind: "public" };

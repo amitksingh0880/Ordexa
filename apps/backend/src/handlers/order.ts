@@ -42,8 +42,13 @@ export const createOrderHandler: Handler = async (
       });
     }
 
+    if (!req.tenantId) {
+      return res.status(400).json({ isError: true, errorMessage: "Tenant not resolved" });
+    }
+
     const orderService = new OrderService();
     const order = await orderService.createOrder({
+      tenantId: req.tenantId,
       userId,
       totalAmount,
       status,

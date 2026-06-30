@@ -47,8 +47,9 @@ export function createPaymentsRouter(): Router {
       if (!parsed.success) {
         return res.status(400).json({ error: parsed.error.issues[0]?.message });
       }
+      if (!req.tenantId) return res.status(400).json({ error: "Tenant not resolved" });
       try {
-        const result = await createPaymentOrder(req.user!.id, parsed.data);
+        const result = await createPaymentOrder(req.user!.id, req.tenantId, parsed.data);
         res.status(201).json({ data: result });
       } catch (err) {
         if (err instanceof EmptyCartError) return res.status(400).json({ error: err.message });

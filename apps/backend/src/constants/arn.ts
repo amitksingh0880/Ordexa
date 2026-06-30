@@ -19,6 +19,7 @@ export const ARN_MODULES = {
   reviews: "reviews",
   messages: "messages",
   payments: "payments",
+  tenants: "tenants",
   accessManagement: "accessmanagement",
 } as const;
 export type ArnModule = (typeof ARN_MODULES)[keyof typeof ARN_MODULES];

@@ -10,6 +10,7 @@ datasource db {
 
 model Order {
   id              String        @id @default(uuid()) @map("_id")
+  tenantId        String
   userId          String
   status          String
   totalAmount     Float
@@ -33,6 +34,7 @@ model Order {
 
   outboxEvents    OutboxEvent[]
 
+  @@index([tenantId])
   @@index([userId])
   @@index([status])
 }
@@ -159,6 +161,7 @@ model Address {
 // in-flight orders that have not yet been confirmed.
 model Inventory {
   id        String   @id @default(uuid()) @map("_id")
+  tenantId  String
   sku       String   @unique
   name      String
   price     Float    @default(0)
@@ -167,6 +170,8 @@ model Inventory {
   reserved  Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
 }
 
 // One reservation per order; the durable record that lets us compensate
@@ -220,17 +225,21 @@ model SagaExecution {
 // A merchandising grouping (e.g. "Essence"). Products reference it by slug.
 model Collection {
   id          String   @id @default(uuid()) @map("_id")
+  tenantId    String
   slug        String   @unique
   name        String
   tagline     String?
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([tenantId])
 }
 
 // A purchasable object in the storefront.
 model Product {
   id             String   @id @default(uuid()) @map("_id")
+  tenantId       String
   slug           String   @unique
   name           String
   series         String                       // editorial sub-label, e.g. "Carbon Black Series"
@@ -249,6 +258,7 @@ model Product {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  @@index([tenantId])
   @@index([collectionSlug])
   @@index([featured])
 }
@@ -257,6 +267,7 @@ model Product {
 // fields are snapshotted at add-time so the bag renders without extra lookups.
 model CartItem {
   id          String   @id @default(uuid()) @map("_id")
+  tenantId    String
   cartId      String
   productSlug String
   name        String
@@ -269,12 +280,14 @@ model CartItem {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  @@index([tenantId])
   @@index([cartId])
 }
 
 // A customer product review, moderated from the admin dashboard.
 model Review {
   id          String   @id @default(uuid()) @map("_id")
+  tenantId    String
   productSlug String
   author      String
   rating      Int
@@ -284,6 +297,7 @@ model Review {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  @@index([tenantId])
   @@index([productSlug])
   @@index([status])
 }
@@ -291,6 +305,7 @@ model Review {
 // A customer enquiry from the storefront contact form, triaged in the admin inbox.
 model Message {
   id        String   @id @default(uuid()) @map("_id")
+  tenantId  String
   name      String
   email     String
   subject   String?
@@ -299,6 +314,7 @@ model Message {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([tenantId])
   @@index([status])
 }
 

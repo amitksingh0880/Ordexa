@@ -18,7 +18,7 @@ export const fulfillPaidOrder = async (orderId: string): Promise<void> => {
 
   const items = (order.items as OrderLine[] | null) ?? [];
   const lines: SaleLine[] = items.map((l) => ({ sku: l.productSlug, quantity: l.quantity }));
-  if (lines.length > 0) await confirmSale(lines);
+  if (lines.length > 0) await confirmSale(order.tenantId, lines);
 
   if (order.customerEmail) await sendEmail(orderConfirmationEmail(order));
 

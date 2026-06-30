@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import { config } from "../config/env";
 import { verifyToken } from "./jwt";
 import { AUTH_ERRORS } from "../constants/auth";
+import { resolveTenantId } from "../access/tenant";
 
 export interface AuthedUser {
   id: string;
@@ -15,9 +16,25 @@ declare global {
   namespace Express {
     interface Request {
       user?: AuthedUser;
+      tenantId?: string;
     }
   }
 }
+
+// Resolves the tenant for every request: the authenticated user's tenant, or
+// an X-Tenant-Id header / the default tenant for anonymous storefront traffic.
+export const tenantContext = async (
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    req.tenantId = req.user ? req.user.tenantId : await resolveTenantId(req);
+  } catch {
+    // leave tenantId unset; tenant-scoped routes will reject
+  }
+  next();
+};
 
 const extractToken = (req: Request): string | null => {
   const header = req.headers.authorization;

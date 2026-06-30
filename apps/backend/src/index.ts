@@ -12,7 +12,7 @@ import { createAuthRouter } from "./auth/router";
 import { createAccessRouter } from "./access/router";
 import { createPaymentsRouter } from "./payments/router";
 import { createProductImportRouter } from "./products/importRouter";
-import { currentUser } from "./auth/middleware";
+import { currentUser, tenantContext } from "./auth/middleware";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
@@ -42,6 +42,7 @@ app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(express.json());
 app.use(cookieParser() as unknown as express.RequestHandler);
 app.use(currentUser);
+app.use(tenantContext);
 
 // Healthcheck route (for readiness & tracing validation)
 app.get("/health", (req, res) => {

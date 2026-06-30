@@ -97,10 +97,13 @@ export const listTenantUsers = async (tenantId: string) => {
   });
   return Promise.all(
     users.map(async (user) => {
-      const mappings = await prisma.accessUserRoleMapping.findMany({
-        where: { userId: user.id, isDeleted: false },
-      });
-      return { ...user, roleIds: mappings.map((m) => m.roleId) };
+      const [mappings, orderCount] = await Promise.all([
+        prisma.accessUserRoleMapping.findMany({
+          where: { userId: user.id, isDeleted: false },
+        }),
+        prisma.order.count({ where: { tenantId, userId: user.id } }),
+      ]);
+      return { ...user, roleIds: mappings.map((m) => m.roleId), orderCount };
     }),
   );
 };

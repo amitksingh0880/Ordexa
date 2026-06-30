@@ -9,6 +9,10 @@ interface CrudRequest extends Request {
 }
 
 const DEFAULT_OWNER_FIELD = "userId";
+const TENANT_FIELD = "tenantId";
+
+const isTenantScoped = (resource: CrudResource): boolean =>
+  resource.tenantScoped !== false;
 
 const coerce = (value: string): unknown => {
   if (value === "true") return true;
@@ -83,11 +87,15 @@ export function createCrudRouter(): Router {
       const resource = req.resource!;
       const verdict = evaluate(req, resource.policy.list);
       if (verdict.status) return res.status(verdict.status).json({ error: verdict.error });
+      if (isTenantScoped(resource) && !req.tenantId) {
+        return res.status(400).json({ error: "Tenant not resolved" });
+      }
 
       const { model, searchFields, filterFields, defaultOrderBy } = resource;
       const { search, skip, take, ...rest } = req.query as Record<string, string>;
 
       const where: Record<string, unknown> = {};
+      if (isTenantScoped(resource)) where[TENANT_FIELD] = req.tenantId;
       for (const field of filterFields) {
         if (rest[field] !== undefined) where[field] = coerce(rest[field]);
       }
@@ -133,6 +141,10 @@ export function createCrudRouter(): Router {
       }
       if (!item) return res.status(404).json({ error: "Not found" });
 
+      if (isTenantScoped(resource) &&
+        (item as Record<string, unknown>)[TENANT_FIELD] !== req.tenantId) {
+        return res.status(404).json({ error: "Not found" });
+      }
       if (verdict.scoped) {
         const ownerField =
           resource.policy.read.kind === "owner"
@@ -152,6 +164,10 @@ export function createCrudRouter(): Router {
       const resource = req.resource!;
       const verdict = evaluate(req, resource.policy.create);
       if (verdict.status) return res.status(verdict.status).json({ error: verdict.error });
+      if (isTenantScoped(resource)) {
+        if (!req.tenantId) return res.status(400).json({ error: "Tenant not resolved" });
+        (req.body as Record<string, unknown>)[TENANT_FIELD] = req.tenantId;
+      }
       stripProtected(req);
 
       if (verdict.scoped && resource.policy.create.kind === "owner") {
@@ -174,14 +190,28 @@ export function createCrudRouter(): Router {
       res.status(verdict.status).json({ error: verdict.error });
       return false;
     }
-    if (verdict.scoped && resource.policy.modify.kind === "owner") {
-      const ownerField = resource.policy.modify.ownerField ?? DEFAULT_OWNER_FIELD;
-      const item = await resource.model
+    const ownerScoped = verdict.scoped && resource.policy.modify.kind === "owner";
+    if (isTenantScoped(resource) || ownerScoped) {
+      const item = (await resource.model
         .findUnique({ where: { id: req.params.id } })
-        .catch(() => null);
-      if (!item || (item as Record<string, unknown>)[ownerField] !== req.user!.id) {
+        .catch(() => null)) as Record<string, unknown> | null;
+      if (!item) {
         res.status(404).json({ error: "Not found" });
         return false;
+      }
+      if (isTenantScoped(resource) && item[TENANT_FIELD] !== req.tenantId) {
+        res.status(404).json({ error: "Not found" });
+        return false;
+      }
+      if (ownerScoped) {
+        const ownerField =
+          resource.policy.modify.kind === "owner"
+            ? resource.policy.modify.ownerField ?? DEFAULT_OWNER_FIELD
+            : DEFAULT_OWNER_FIELD;
+        if (item[ownerField] !== req.user!.id) {
+          res.status(404).json({ error: "Not found" });
+          return false;
+        }
       }
     }
     return true;

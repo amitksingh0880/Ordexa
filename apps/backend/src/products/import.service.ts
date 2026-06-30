@@ -73,7 +73,10 @@ const parseRecord = (record: Record<string, unknown>): { data?: ProductInput; er
   return { data: out as ProductInput };
 };
 
-export const importProducts = async (buffer: Buffer): Promise<RowResult[]> => {
+export const importProducts = async (
+  buffer: Buffer,
+  tenantId: string,
+): Promise<RowResult[]> => {
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.load(buffer as unknown as Parameters<typeof wb.xlsx.load>[0]);
   const sheet = wb.worksheets[0];
@@ -101,7 +104,8 @@ export const importProducts = async (buffer: Buffer): Promise<RowResult[]> => {
     }
     try {
       const existing = await prisma.product.findUnique({ where: { slug: data.slug } });
-      await prisma.product.upsert({ where: { slug: data.slug }, create: data, update: data });
+      const record = { ...data, tenantId };
+      await prisma.product.upsert({ where: { slug: data.slug }, create: record, update: record });
       results.push({ row: r, slug: data.slug, status: existing ? "updated" : "created" });
     } catch (err) {
       results.push({ row: r, slug: data.slug, status: "error", message: (err as Error).message });

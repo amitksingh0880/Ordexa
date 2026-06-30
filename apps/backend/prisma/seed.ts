@@ -433,18 +433,12 @@ async function main() {
   }
 
   for (const c of collections) {
-    await prisma.collection.upsert({
-      where: { slug: c.slug },
-      update: c,
-      create: c,
-    });
+    const data = { ...c, tenantId };
+    await prisma.collection.upsert({ where: { slug: c.slug }, update: data, create: data });
   }
   for (const p of products) {
-    await prisma.product.upsert({
-      where: { slug: p.slug },
-      update: p,
-      create: p,
-    });
+    const data = { ...p, tenantId };
+    await prisma.product.upsert({ where: { slug: p.slug }, update: data, create: data });
   }
 
   // Mirror the catalog into the Inventory model so the admin dashboard tracks the
@@ -452,6 +446,7 @@ async function main() {
   for (const [index, p] of products.entries()) {
     const available = index === 3 ? 0 : ((index * 37) % 100) + 6;
     const inventory = {
+      tenantId,
       sku: p.slug,
       name: p.name,
       price: p.price,
@@ -488,6 +483,7 @@ async function main() {
     const paid =
       ["Confirmed", "Shipped", "Delivered"].includes(o.status) || o.id === "seed-order-1";
     const base = {
+      tenantId,
       userId: o.id,
       status: o.status,
       totalAmount,
@@ -512,7 +508,8 @@ async function main() {
   ];
   for (const r of reviews) {
     const { id, ...rest } = r;
-    await prisma.review.upsert({ where: { id }, update: rest, create: r });
+    const data = { ...rest, tenantId };
+    await prisma.review.upsert({ where: { id }, update: data, create: { id, ...data } });
   }
 
   const messages = [
@@ -523,7 +520,8 @@ async function main() {
   ];
   for (const m of messages) {
     const { id, ...rest } = m;
-    await prisma.message.upsert({ where: { id }, update: rest, create: m });
+    const data = { ...rest, tenantId };
+    await prisma.message.upsert({ where: { id }, update: data, create: { id, ...data } });
   }
 
   console.log(

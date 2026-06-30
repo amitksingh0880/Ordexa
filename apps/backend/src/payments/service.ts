@@ -30,9 +30,12 @@ export interface PaymentOrderResult {
 
 export const createPaymentOrder = async (
   userId: string,
+  tenantId: string,
   input: CreatePaymentOrderInput,
 ): Promise<PaymentOrderResult> => {
-  const lines = await prisma.cartItem.findMany({ where: { cartId: input.cartId } });
+  const lines = await prisma.cartItem.findMany({
+    where: { cartId: input.cartId, tenantId },
+  });
   if (lines.length === 0) throw new EmptyCartError("Cart is empty");
 
   const subtotal = lines.reduce((sum, l) => sum + l.price * l.quantity, 0);
@@ -42,6 +45,7 @@ export const createPaymentOrder = async (
 
   const order = await prisma.order.create({
     data: {
+      tenantId,
       userId,
       status: OrderStatus.Pending,
       paymentStatus: PaymentStatus.Unpaid,
