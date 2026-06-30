@@ -45,13 +45,13 @@ export function CartSheet() {
             <div className="flex-1 space-y-2 overflow-y-auto px-6 py-4">
               {lines.map((line) => (
                 <div
-                  key={`${line.product.slug}-${line.finish}`}
+                  key={line.id}
                   className="flex gap-4 border-b border-line/10 py-4"
                 >
                   <div className="h-40 w-32 flex-shrink-0 overflow-hidden rounded-2xl bg-soft">
                     <img
-                      src={line.product.images[0]}
-                      alt={line.product.name}
+                      src={line.image}
+                      alt={line.name}
                       className="h-full w-full object-cover"
                     />
                   </div>
@@ -59,26 +59,24 @@ export function CartSheet() {
                     <div>
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="font-display text-body-lg font-bold tracking-tight text-ink">
-                          {line.product.name}
+                          {line.name}
                         </h3>
                         <span className="font-body text-sm font-semibold text-ink">
-                          {formatPrice(line.product.price, line.product.currency)}
+                          {formatPrice(line.price, line.currency)}
                         </span>
                       </div>
                       <p className="mt-1 font-body text-label uppercase tracking-[0.1em] text-ink-muted">
-                        {line.product.series}
+                        {line.series}
                       </p>
                     </div>
                     <div className="mt-4 flex items-center justify-between">
                       <QuantityStepper
                         value={line.quantity}
-                        onChange={(quantity) =>
-                          updateQuantity(line.product.slug, line.finish, quantity)
-                        }
+                        onChange={(quantity) => updateQuantity(line.id, quantity)}
                       />
                       <button
                         type="button"
-                        onClick={() => removeItem(line.product.slug, line.finish)}
+                        onClick={() => removeItem(line.id)}
                         className="font-body text-[10px] uppercase tracking-[0.1em] text-ink-muted transition-colors hover:text-destructive"
                       >
                         {SHOP.cart.remove}

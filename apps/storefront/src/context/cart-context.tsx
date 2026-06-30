@@ -1,81 +1,92 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
 import { STORAGE_KEYS } from "../constants/app";
-import type { CartLine, Product } from "../types/shop";
+import { cart } from "../lib/resources";
+import type { CartItem, Product } from "../types/shop";
 
 interface CartContextValue {
-  lines: CartLine[];
+  lines: CartItem[];
   count: number;
   subtotal: number;
+  isLoading: boolean;
   open: boolean;
   setOpen: (open: boolean) => void;
   addItem: (product: Product, finish: string, quantity?: number) => void;
-  updateQuantity: (slug: string, finish: string, quantity: number) => void;
-  removeItem: (slug: string, finish: string) => void;
+  updateQuantity: (id: string, quantity: number) => void;
+  removeItem: (id: string) => void;
   clear: () => void;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-const sameLine = (line: CartLine, slug: string, finish: string) =>
-  line.product.slug === slug && line.finish === finish;
-
-function loadLines(): CartLine[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.cart);
-    return raw ? (JSON.parse(raw) as CartLine[]) : [];
-  } catch {
-    return [];
+function resolveCartId(): string {
+  let id = localStorage.getItem(STORAGE_KEYS.cartId);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(STORAGE_KEYS.cartId, id);
   }
+  return id;
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [lines, setLines] = useState<CartLine[]>(loadLines);
+  const [cartId] = useState(resolveCartId);
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.cart, JSON.stringify(lines));
-  }, [lines]);
+  const { data: lines = [], isLoading } = cart.useList({ cartId });
+  const createItem = cart.useCreate();
+  const updateItem = cart.useUpdate();
+  const removeItemMutation = cart.useRemove();
 
   const value = useMemo<CartContextValue>(() => {
     const count = lines.reduce((sum, l) => sum + l.quantity, 0);
-    const subtotal = lines.reduce((sum, l) => sum + l.product.price * l.quantity, 0);
+    const subtotal = lines.reduce((sum, l) => sum + l.price * l.quantity, 0);
 
     return {
       lines,
       count,
       subtotal,
+      isLoading,
       open,
       setOpen,
-      addItem: (product, finish, quantity = 1) =>
-        setLines((prev) => {
-          const existing = prev.find((l) => sameLine(l, product.slug, finish));
-          if (existing) {
-            return prev.map((l) =>
-              sameLine(l, product.slug, finish)
-                ? { ...l, quantity: l.quantity + quantity }
-                : l,
-            );
-          }
-          return [...prev, { product, finish, quantity }];
-        }),
-      updateQuantity: (slug, finish, quantity) =>
-        setLines((prev) =>
-          prev
-            .map((l) => (sameLine(l, slug, finish) ? { ...l, quantity } : l))
-            .filter((l) => l.quantity > 0),
-        ),
-      removeItem: (slug, finish) =>
-        setLines((prev) => prev.filter((l) => !sameLine(l, slug, finish))),
-      clear: () => setLines([]),
+      addItem: (product, finish, quantity = 1) => {
+        const existing = lines.find(
+          (l) => l.productSlug === product.slug && l.finish === finish,
+        );
+        if (existing) {
+          updateItem.mutate({
+            id: existing.id,
+            input: { quantity: existing.quantity + quantity },
+          });
+          return;
+        }
+        createItem.mutate({
+          cartId,
+          productSlug: product.slug,
+          name: product.name,
+          series: product.series,
+          price: product.price,
+          currency: product.currency,
+          image: product.images[0],
+          finish,
+          quantity,
+        });
+      },
+      updateQuantity: (id, quantity) => {
+        if (quantity <= 0) {
+          removeItemMutation.mutate(id);
+          return;
+        }
+        updateItem.mutate({ id, input: { quantity } });
+      },
+      removeItem: (id) => removeItemMutation.mutate(id),
+      clear: () => lines.forEach((l) => removeItemMutation.mutate(l.id)),
     };
-  }, [lines, open]);
+  }, [lines, isLoading, open, cartId, createItem, updateItem, removeItemMutation]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
