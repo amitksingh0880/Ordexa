@@ -193,6 +193,26 @@ export default function OrdersPage() {
                 ) : null}
               </div>
 
+              {selected.shippingAddress ? (
+                <div className="space-y-1 rounded-md border p-3 text-sm">
+                  <div className="font-medium">Ship to</div>
+                  <p className="text-muted-foreground">
+                    {selected.shippingAddress.fullName}, {selected.shippingAddress.phone}
+                    <br />
+                    {selected.shippingAddress.line1}
+                    {selected.shippingAddress.line2 ? `, ${selected.shippingAddress.line2}` : ""}
+                    <br />
+                    {selected.shippingAddress.city}, {selected.shippingAddress.state}{" "}
+                    {selected.shippingAddress.postalCode}, {selected.shippingAddress.country}
+                  </p>
+                  {selected.shippingMethod ? (
+                    <p className="text-muted-foreground text-xs">
+                      {selected.shippingMethod} · {formatCurrency(selected.shippingCost ?? 0)}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+
               <DialogFooter>
                 {(ORDER_TRANSITIONS[selected.status] ?? []).length === 0 ? (
                   <span className="text-muted-foreground text-sm">
