@@ -15,5 +15,5 @@ export const API = {
 } as const;
 
 export const STORAGE_KEYS = {
-  cart: "ordexa-shop-cart",
+  cartId: "ordexa-shop-cart-id",
 } as const;

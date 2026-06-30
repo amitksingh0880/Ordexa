@@ -10,6 +10,7 @@ export const SHOP = {
   resources: {
     products: "products",
     collections: "collections",
+    cart: "cart",
   },
 
   currency: { locale: "en-US", code: "USD" },

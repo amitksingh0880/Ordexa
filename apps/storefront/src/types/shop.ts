@@ -30,8 +30,15 @@ export interface Collection {
   description?: string | null;
 }
 
-export interface CartLine {
-  product: Product;
+export interface CartItem {
+  id: string;
+  cartId: string;
+  productSlug: string;
+  name: string;
+  series: string;
+  price: number;
+  currency: string;
+  image: string;
   finish: string;
   quantity: number;
 }

@@ -32,6 +32,12 @@ export const RESOURCES: Record<string, CrudResource> = {
     lookupField: "slug",
     defaultOrderBy: { createdAt: "asc" },
   },
+  cart: {
+    model: prisma.cartItem as unknown as ModelDelegate,
+    searchFields: ["name"],
+    filterFields: ["cartId", "productSlug", "finish"],
+    defaultOrderBy: { createdAt: "asc" },
+  },
 };
 
 export type ResourceName = keyof typeof RESOURCES;

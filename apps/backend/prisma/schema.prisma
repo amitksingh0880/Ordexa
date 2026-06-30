@@ -123,3 +123,22 @@ model Product {
   @@index([featured])
 }
 
+// A line in a guest shopping bag. Identified by a client-held cartId; product
+// fields are snapshotted at add-time so the bag renders without extra lookups.
+model CartItem {
+  id          String   @id @default(uuid()) @map("_id")
+  cartId      String
+  productSlug String
+  name        String
+  series      String
+  price       Float
+  currency    String   @default("USD")
+  image       String
+  finish      String
+  quantity    Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([cartId])
+}
+
