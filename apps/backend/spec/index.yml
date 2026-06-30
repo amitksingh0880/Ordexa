@@ -2,6 +2,16 @@ openapi: 3.1.0
 info:
   title: Ordexa API
   version: 1.0.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:5000
+    description: Local development
+
+security:
+  - bearerAuth: []
 
 paths:
   /order/create:
@@ -48,6 +58,8 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/InventoryItem'
+        '400':
+          description: Bad Request
         '500':
           description: Server Error
 
@@ -91,6 +103,11 @@ paths:
           description: Server Error
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     OrderInput:
       type: object

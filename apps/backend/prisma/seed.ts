@@ -1,5 +1,83 @@
 import "dotenv/config";
 import { prisma } from "../src/lib/prisma";
+import { hashPassword } from "../src/auth/password";
+import { UserRole } from "../src/constants/auth";
+import { syncPermissionCatalog } from "../src/access/discovery";
+import "../src/access/router"; // registers accessmanagement guard ARNs for discovery
+import "../src/payments/router"; // registers payments:checkout guard ARN for discovery
+import "../src/tenants/router"; // registers tenants:write guard ARN for discovery
+import {
+  DEFAULT_TENANT,
+  SYSTEM_ROLES,
+  ARN_MODULES,
+  ARN_ACTIONS,
+  moduleTemplate,
+} from "../src/constants/arn";
+
+const CUSTOMER_ARNS = [
+  moduleTemplate(ARN_MODULES.orders, ARN_ACTIONS.own),
+  moduleTemplate(ARN_MODULES.payments, ARN_ACTIONS.checkout),
+];
+
+const SEED_USERS = [
+  {
+    email: process.env.SEED_ADMIN_EMAIL ?? "admin@ordexa.shop",
+    password: process.env.SEED_ADMIN_PASSWORD ?? "admin12345",
+    name: "Ordexa Admin",
+    role: UserRole.Admin,
+    roleName: SYSTEM_ROLES.administrator,
+  },
+  {
+    email: process.env.SEED_CUSTOMER_EMAIL ?? "customer@ordexa.shop",
+    password: process.env.SEED_CUSTOMER_PASSWORD ?? "customer12345",
+    name: "Demo Customer",
+    role: UserRole.Customer,
+    roleName: SYSTEM_ROLES.customer,
+  },
+];
+
+async function seedAccessControl() {
+  const tenant = await prisma.tenant.upsert({
+    where: { slug: DEFAULT_TENANT.slug },
+    update: { name: DEFAULT_TENANT.name },
+    create: { slug: DEFAULT_TENANT.slug, name: DEFAULT_TENANT.name },
+  });
+
+  await syncPermissionCatalog();
+
+  const administrator = await prisma.accessRole.upsert({
+    where: { tenantId_roleName: { tenantId: tenant.id, roleName: SYSTEM_ROLES.administrator } },
+    update: { isSuperAdmin: true, isActive: true, isDeleted: false },
+    create: {
+      tenantId: tenant.id,
+      roleName: SYSTEM_ROLES.administrator,
+      description: "Full tenant access",
+      isSuperAdmin: true,
+    },
+  });
+
+  const customer = await prisma.accessRole.upsert({
+    where: { tenantId_roleName: { tenantId: tenant.id, roleName: SYSTEM_ROLES.customer } },
+    update: { isActive: true, isDeleted: false },
+    create: {
+      tenantId: tenant.id,
+      roleName: SYSTEM_ROLES.customer,
+      description: "Storefront shopper",
+    },
+  });
+
+  const customerPerms = await prisma.accessPermission.findMany({
+    where: { resourceArn: { in: CUSTOMER_ARNS } },
+  });
+  await prisma.accessRolePermissionMapping.deleteMany({ where: { roleId: customer.id } });
+  if (customerPerms.length > 0) {
+    await prisma.accessRolePermissionMapping.createMany({
+      data: customerPerms.map((p) => ({ roleId: customer.id, permissionId: p.id })),
+    });
+  }
+
+  return { tenantId: tenant.id, roleByName: { [SYSTEM_ROLES.administrator]: administrator.id, [SYSTEM_ROLES.customer]: customer.id } };
+}
 
 const IMG = "https://lh3.googleusercontent.com/aida-public/";
 const img = (token: string) => `${IMG}${token}`;
@@ -337,22 +415,124 @@ const products = [
 ];
 
 async function main() {
-  for (const c of collections) {
-    await prisma.collection.upsert({
-      where: { slug: c.slug },
-      update: c,
-      create: c,
+  const { tenantId, roleByName } = await seedAccessControl();
+
+  for (const u of SEED_USERS) {
+    const passwordHash = await hashPassword(u.password);
+    const user = await prisma.user.upsert({
+      where: { email: u.email },
+      update: { name: u.name, role: u.role, tenantId },
+      create: { email: u.email, name: u.name, role: u.role, tenantId, passwordHash },
     });
+    const roleId = roleByName[u.roleName];
+    const existing = await prisma.accessUserRoleMapping.findFirst({
+      where: { userId: user.id, roleId },
+    });
+    if (!existing) {
+      await prisma.accessUserRoleMapping.create({ data: { userId: user.id, roleId } });
+    }
+  }
+
+  for (const c of collections) {
+    const data = { ...c, tenantId };
+    await prisma.collection.upsert({ where: { slug: c.slug }, update: data, create: data });
   }
   for (const p of products) {
-    await prisma.product.upsert({
-      where: { slug: p.slug },
-      update: p,
-      create: p,
+    const data = { ...p, tenantId };
+    await prisma.product.upsert({ where: { slug: p.slug }, update: data, create: data });
+  }
+
+  // Mirror the catalog into the Inventory model so the admin dashboard tracks the
+  // same products (sku = product slug) the storefront sells.
+  for (const [index, p] of products.entries()) {
+    const available = index === 3 ? 0 : ((index * 37) % 100) + 6;
+    const inventory = {
+      tenantId,
+      sku: p.slug,
+      name: p.name,
+      price: p.price,
+      currency: (p as { currency?: string }).currency ?? "USD",
+      available,
+      reserved: index % 4 === 0 ? 2 : 0,
+    };
+    await prisma.inventory.upsert({
+      where: { sku: p.slug },
+      update: inventory,
+      create: inventory,
     });
   }
+
+  const findP = (slug: string) => products.find((p) => p.slug === slug)!;
+  const line = (slug: string, finish: string, quantity: number) => {
+    const p = findP(slug);
+    return { productSlug: p.slug, name: p.name, price: p.price, finish, quantity };
+  };
+  const day = 24 * 60 * 60 * 1000;
+
+  const orders = [
+    { id: "seed-order-1", status: "Pending", customerName: "Aria Chen", customerEmail: "aria@example.com", items: [line("ether-vessel-01", "#1b1b1b", 1), line("ordexa-journal-v01", "#1b1b1b", 2)], daysAgo: 0 },
+    { id: "seed-order-2", status: "Pending", customerName: "Marcus Hale", customerEmail: "marcus@example.com", items: [line("lumina-timepiece", "#000000", 1)], daysAgo: 1 },
+    { id: "seed-order-3", status: "Confirmed", customerName: "Sofia Reyes", customerEmail: "sofia@example.com", items: [line("orbital-light-02", "#ffffff", 1), line("crystalline-set", "#ffffff", 1)], daysAgo: 2 },
+    { id: "seed-order-4", status: "Shipped", customerName: "Liam Novak", customerEmail: "liam@example.com", items: [line("void-lounge-chair", "#8C8880", 1)], daysAgo: 4 },
+    { id: "seed-order-5", status: "Delivered", customerName: "Noor Abadi", customerEmail: "noor@example.com", items: [line("ether-fragrance", "#ffffff", 2)], daysAgo: 7 },
+    { id: "seed-order-6", status: "Delivered", customerName: "Elena Fischer", customerEmail: "elena@example.com", items: [line("ordexa-series-a", "#000000", 1)], daysAgo: 9 },
+    { id: "seed-order-7", status: "Cancelled", customerName: "Tom Becker", customerEmail: "tom@example.com", items: [line("axis-desk-lamp", "#000000", 1)], daysAgo: 11 },
+    { id: "seed-order-8", status: "Pending", customerName: "Mira Patel", customerEmail: "mira@example.com", items: [line("loom-throw", "#E9E8E4", 1), line("vessel-no-04", "#E9E8E4", 1)], daysAgo: 0 },
+  ];
+  for (const o of orders) {
+    const totalAmount = o.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    const paid =
+      ["Confirmed", "Shipped", "Delivered"].includes(o.status) || o.id === "seed-order-1";
+    const base = {
+      tenantId,
+      userId: o.id,
+      status: o.status,
+      totalAmount,
+      currency: "USD",
+      customerName: o.customerName,
+      customerEmail: o.customerEmail,
+      items: o.items,
+      paymentStatus: paid ? "Paid" : "Unpaid",
+      paymentMethod: paid ? "Razorpay" : null,
+      paymentId: paid ? `pay_${o.id.replace("seed-order-", "seed")}` : null,
+      createdAt: new Date(Date.now() - o.daysAgo * day),
+    };
+    await prisma.order.upsert({ where: { id: o.id }, update: base, create: { id: o.id, ...base } });
+  }
+
+  const reviews = [
+    { id: "seed-review-1", productSlug: "ordexa-series-a", author: "Elena Fischer", rating: 5, title: "Sublime", body: "The resonance is unreal — fills the room without effort.", status: "Published" },
+    { id: "seed-review-2", productSlug: "ordexa-series-a", author: "Marcus Hale", rating: 4, title: "Beautiful object", body: "Gorgeous design, a touch pricey but worth it.", status: "Published" },
+    { id: "seed-review-3", productSlug: "ether-vessel-01", author: "Aria Chen", rating: 5, title: "Centerpiece", body: "The glaze catches light through the whole day.", status: "Published" },
+    { id: "seed-review-4", productSlug: "lumina-timepiece", author: "Noor Abadi", rating: 5, title: null, body: "Precision you can feel.", status: "Pending" },
+    { id: "seed-review-5", productSlug: "void-lounge-chair", author: "Liam Novak", rating: 4, title: null, body: "Sculptural and surprisingly comfortable.", status: "Pending" },
+  ];
+  for (const r of reviews) {
+    const { id, ...rest } = r;
+    const data = { ...rest, tenantId };
+    await prisma.review.upsert({ where: { id }, update: data, create: { id, ...data } });
+  }
+
+  const messages = [
+    { id: "seed-msg-1", name: "Priya Nair", email: "priya@example.com", subject: "Bulk order enquiry", body: "Do you offer trade pricing for 10+ Series A units?", status: "Unread" },
+    { id: "seed-msg-2", name: "Hugo Martin", email: "hugo@example.com", subject: "Shipping to EU", body: "What are the lead times for delivery to France?", status: "Unread" },
+    { id: "seed-msg-3", name: "Dana Lee", email: "dana@example.com", subject: "Warranty", body: "Is the 2-year warranty transferable?", status: "Read" },
+    { id: "seed-msg-4", name: "Sam Okoro", email: "sam@example.com", subject: "Press request", body: "I'd love to feature the Essence collection in our magazine.", status: "Unread" },
+  ];
+  for (const m of messages) {
+    const { id, ...rest } = m;
+    const data = { ...rest, tenantId };
+    await prisma.message.upsert({ where: { id }, update: data, create: { id, ...data } });
+  }
+
+  await prisma.coupon.upsert({
+    where: { code: "WELCOME10" },
+    update: { tenantId, type: "percent", value: 10, active: true },
+    create: { tenantId, code: "WELCOME10", type: "percent", value: 10, minSubtotal: 0, active: true },
+  });
+
   console.log(
-    `✅ Seeded ${collections.length} collections and ${products.length} products`,
+    `✅ Seeded ${collections.length} collections, ${products.length} products, ${products.length} inventory items, ${orders.length} orders, ${reviews.length} reviews, ${messages.length} messages`,
   );
 }
 

@@ -9,34 +9,171 @@ datasource db {
 }
 
 model Order {
-  id           String        @id @default(uuid()) @map("_id")
-  userId       String
-  status       String
-  totalAmount  Float
-  currency     String        @default("USD") // default currency
-  description  String?       // optional order notes
-  sku          String        @default("DEMO-SKU") // inventory item ordered
-  quantity     Int           @default(1)           // units requested
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  deletedAt    DateTime?     // for soft delete
+  id              String        @id @default(uuid()) @map("_id")
+  tenantId        String
+  userId          String
+  status          String
+  totalAmount     Float
+  currency        String        @default("USD")
+  description     String?
+  customerName    String?
+  customerEmail   String?
+  items           Json?         // snapshot of cart lines [{ productSlug, name, price, finish, quantity }]
+  shippingAddress Json?         // snapshot of the chosen Address at checkout time
+  shippingMethod  String?
+  shippingCost    Float         @default(0)
+  paymentId       String?
+  razorpayOrderId String?
+  paymentStatus   String        @default("Unpaid") // Unpaid | Paid | Refunded
+  paymentMethod   String?
+  couponCode      String?
+  discount        Float         @default(0)
+  sku             String        @default("DEMO-SKU")
+  quantity        Int           @default(1)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
 
-  outboxEvents OutboxEvent[] // relation: one order -> many events
+  outboxEvents    OutboxEvent[]
 
+  @@index([tenantId])
   @@index([userId])
   @@index([status])
+}
+
+// A store/organization. Users, roles, and ARNs are scoped to a tenant.
+model Tenant {
+  id        String   @id @default(uuid()) @map("_id")
+  slug      String   @unique
+  name      String
+  isActive  Boolean  @default(true)
+  config    Json?    // per-tenant overrides (branding, shipping, payment keys, …)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users User[]
+  roles AccessRole[]
+}
+
+// `role` is the coarse core role; fine-grained access comes from ARN
+// permissions resolved via AccessUserRoleMapping.
+model User {
+  id           String    @id @default(uuid()) @map("_id")
+  tenantId     String
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         String    @default("customer") // customer | admin
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tenant       Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  addresses    Address[]
+  roleMappings AccessUserRoleMapping[]
+
+  @@index([tenantId])
+}
+
+// ARN access control: Permissions (catalogued ARNs) → Roles → Users. A user's
+// effective ARNs are the union of their roles' permissions, baked into the JWT.
+
+model AccessPermission {
+  id              String    @id @default(uuid()) @map("_id")
+  permissionName  String
+  resourceArn     String    @unique
+  description     String?
+  isActive        Boolean   @default(true)
+  deprecatedSince DateTime?
+  createdAt       DateTime  @default(now())
+
+  roleMappings    AccessRolePermissionMapping[]
+}
+
+model AccessRole {
+  id           String    @id @default(uuid()) @map("_id")
+  tenantId     String
+  roleName     String
+  description  String?
+  isActive     Boolean   @default(true)
+  isSuperAdmin Boolean   @default(false)
+  isDeleted    Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tenant             Tenant                        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  permissionMappings AccessRolePermissionMapping[]
+  userMappings       AccessUserRoleMapping[]
+
+  @@unique([tenantId, roleName])
+  @@index([tenantId])
+}
+
+model AccessRolePermissionMapping {
+  id           String   @id @default(uuid()) @map("_id")
+  roleId       String
+  permissionId String
+  createdAt    DateTime @default(now())
+  isDeleted    Boolean  @default(false)
+
+  role       AccessRole       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission AccessPermission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@index([roleId])
+  @@index([permissionId])
+}
+
+model AccessUserRoleMapping {
+  id        String   @id @default(uuid()) @map("_id")
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+  isDeleted Boolean  @default(false)
+
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role AccessRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([roleId])
+}
+
+// A snapshot is copied onto the Order at checkout, so later edits never mutate
+// past orders.
+model Address {
+  id         String   @id @default(uuid()) @map("_id")
+  userId     String
+  label      String?
+  fullName   String
+  phone      String
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  postalCode String
+  country    String
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 // Stock levels per SKU. `available` is sellable stock; `reserved` is held by
 // in-flight orders that have not yet been confirmed.
 model Inventory {
   id        String   @id @default(uuid()) @map("_id")
+  tenantId  String
   sku       String   @unique
   name      String
+  price     Float    @default(0)
+  currency  String   @default("USD")
   available Int      @default(0)
   reserved  Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
 }
 
 // One reservation per order; the durable record that lets us compensate
@@ -90,17 +227,21 @@ model SagaExecution {
 // A merchandising grouping (e.g. "Essence"). Products reference it by slug.
 model Collection {
   id          String   @id @default(uuid()) @map("_id")
+  tenantId    String
   slug        String   @unique
   name        String
   tagline     String?
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([tenantId])
 }
 
 // A purchasable object in the storefront.
 model Product {
   id             String   @id @default(uuid()) @map("_id")
+  tenantId       String
   slug           String   @unique
   name           String
   series         String                       // editorial sub-label, e.g. "Carbon Black Series"
@@ -119,7 +260,91 @@ model Product {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  @@index([tenantId])
   @@index([collectionSlug])
   @@index([featured])
+}
+
+// A line in a guest shopping bag. Identified by a client-held cartId; product
+// fields are snapshotted at add-time so the bag renders without extra lookups.
+model CartItem {
+  id          String   @id @default(uuid()) @map("_id")
+  tenantId    String
+  cartId      String
+  productSlug String
+  name        String
+  series      String
+  price       Float
+  currency    String   @default("USD")
+  image       String
+  finish      String
+  quantity    Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([cartId])
+}
+
+// A customer product review, moderated from the admin dashboard.
+model Review {
+  id          String   @id @default(uuid()) @map("_id")
+  tenantId    String
+  productSlug String
+  author      String
+  rating      Int
+  title       String?
+  body        String
+  status      String   @default("Pending") // Pending | Published | Rejected
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([productSlug])
+  @@index([status])
+}
+
+// A customer enquiry from the storefront contact form, triaged in the admin inbox.
+model Message {
+  id        String   @id @default(uuid()) @map("_id")
+  tenantId  String
+  name      String
+  email     String
+  subject   String?
+  body      String
+  status    String   @default("Unread") // Unread | Read | Archived
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([status])
+}
+
+// A discount code applied at checkout. `type` is "percent" | "fixed".
+model Coupon {
+  id          String    @id @default(uuid()) @map("_id")
+  tenantId    String
+  code        String    @unique
+  type        String    @default("percent")
+  value       Float
+  minSubtotal Float     @default(0)
+  active      Boolean   @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([tenantId])
+}
+
+// A saved product a customer wants to buy later. One row per (user, product).
+model Wishlist {
+  id          String   @id @default(uuid()) @map("_id")
+  tenantId    String
+  userId      String
+  productSlug String
+  createdAt   DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([userId])
 }
 

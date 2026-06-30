@@ -8,6 +8,13 @@ import { createOrderHandler } from "./handlers/order";
 import { getOrdersByUserHandler } from "./handlers/getOrdersByUser";
 import { getInventoryHandler } from "./handlers/getInventory";
 import { createCrudRouter } from "./crud/router";
+import { createAuthRouter } from "./auth/router";
+import { createAccessRouter } from "./access/router";
+import { createPaymentsRouter } from "./payments/router";
+import { createProductImportRouter } from "./products/importRouter";
+import { createTenantRouter } from "./tenants/router";
+import { currentUser, tenantContext } from "./auth/middleware";
+import cookieParser from "cookie-parser";
 import cors from "cors";
 
 // Node ESM ("type": "module") has no __dirname; derive it from import.meta.url.
@@ -31,8 +38,12 @@ const requestCounter = meter.createCounter("http_requests_total", {
 // Express app
 // ------------------------------------------------------
 const app = express();
+const corsOrigin = config.cors.origins.includes("*") ? true : config.cors.origins;
+app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(express.json());
-app.use(cors());
+app.use(cookieParser() as unknown as express.RequestHandler);
+app.use(currentUser);
+app.use(tenantContext);
 
 // Healthcheck route (for readiness & tracing validation)
 app.get("/health", (req, res) => {
@@ -73,6 +84,21 @@ app.use((req, res, next) => {
     next();
   });
 });
+
+// Authentication — register/login/logout/me/addresses/cart-merge.
+app.use("/auth", createAuthRouter());
+
+// Payments — Razorpay order creation + signature verification.
+app.use("/payments", createPaymentsRouter());
+
+// Tenant master table + ARN access management — mounted before the generic CRUD
+// router so they are not captured by the /api/:resource param route.
+app.use("/api/tenants", createTenantRouter());
+app.use("/api/access", createAccessRouter());
+
+// Product bulk import/template — mounted before generic CRUD so /api/products/
+// import|template are not captured by the /:resource/:id route.
+app.use("/api/products", createProductImportRouter());
 
 // Storefront catalog CRUD — mounted before the OpenAPI catch-all.
 app.use("/api", createCrudRouter());

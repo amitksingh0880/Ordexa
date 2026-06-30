@@ -52,10 +52,37 @@
 - Comment only the non-obvious: a "why", a subtle constraint, or a public contract.
 - No banner/decoration blocks, no restating what the code already says, no commented-out code.
 
+### 8. Derive, don't duplicate — registries are discovered, never hand-maintained
+- **Never hardcode a list/catalog that restates information already declared somewhere else.**
+  If the data exists at an enforcement point or in a config, the catalog must be *derived*
+  from it at runtime — not copied into a separate hand-edited array.
+- Example (binding precedent): the ARN permission catalogue is **discovered**, not listed.
+  CRUD ARNs are derived from the resource registry's policies (`apps/backend/src/crud/registry.ts`);
+  guarded routes self-register their ARN via `authorizeArn` into `apps/backend/src/access/discovery.ts`.
+  Adding a resource or a guard automatically extends the catalogue — there is no list to update.
+- This mirrors the RuleEngine reference (`D:\Automation\AZURE\RuleEngineAPI` `SecurityDiscoveryHelper`),
+  which reflects over controllers/attributes rather than maintaining a static permission table.
+- Before adding any array of names/codes/routes/permissions, ask: "what already declares this?"
+  Derive from that source; only declare a value once, at the point it is actually used.
+- Prefer enhancing the generator/discovery over extending a literal list. New capabilities should
+  fall out of the existing single source of truth, not require a parallel registry to be kept in sync.
+
+### 9. Modern, dynamic, enhanced — by default, everywhere
+- **Every piece of the project — not just ARN — must be done in the most modern, dynamic, best-practice
+  manner.** When there is a choice between a static/manual approach and a generated/derived/config-driven
+  one, always choose the dynamic one.
+- Favour generic, reusable, metadata/schema-driven solutions over one-off hand-written code: schema-driven
+  forms (Zod + AutoForm), generated route trees, discovered registries, factory-built API/query layers,
+  config-driven values. If you find yourself writing the same shape twice, build the abstraction instead.
+- Don't settle for the rote version because it's faster. Try the better, newer approach; enhance existing
+  utilities rather than bypassing them. Leave each touched area more dynamic than you found it.
+- Treat these principles as a ratchet: new code must meet them, and nearby code should be improved toward
+  them when touched.
+
 ## Centralized Files — use these, never re-hardcode
 
 When implementing anything new, **pull values/constants/components from these single
 sources of truth and import them**. Do not introduce a new inline literal — if a value is
 missing, add it to the matching file below, then reference it:
-- `apps/frontend/src/constants/` — Frontend UI strings, constants, and settings
+- `apps/admin/src/constants/` — Frontend UI strings, constants, and settings
 - `apps/backend/src/config/env.ts` — Backend configuration and environment parameters

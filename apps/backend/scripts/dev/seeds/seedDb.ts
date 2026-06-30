@@ -1,10 +1,18 @@
 import { PrismaClient } from '@prisma/client';
 import { INVENTORY_DEFAULTS } from '../../../src/constants/orders';
+import { DEFAULT_TENANT } from '../../../src/constants/arn';
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('🌱 Seeding database...');
+
+  const tenant = await prisma.tenant.upsert({
+    where: { slug: DEFAULT_TENANT.slug },
+    update: {},
+    create: { slug: DEFAULT_TENANT.slug, name: DEFAULT_TENANT.name },
+  });
+  const tenantId = tenant.id;
 
   // Seed inventory stock so orders have something to reserve against.
   const inventory = [
@@ -15,7 +23,7 @@ async function main() {
   for (const item of inventory) {
     await prisma.inventory.upsert({
       where: { sku: item.sku },
-      create: { sku: item.sku, name: item.name, available: item.available, reserved: 0 },
+      create: { tenantId, sku: item.sku, name: item.name, available: item.available, reserved: 0 },
       update: { name: item.name, available: item.available },
     });
     console.log(`📦 Inventory ready: ${item.sku} (${item.available} available)`);
@@ -28,6 +36,7 @@ async function main() {
     // Create an order
     const order = await prisma.order.create({
       data: {
+        tenantId,
         userId,
         status: 'Created',
         totalAmount: 120.50,

@@ -3,19 +3,27 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
+    "dev": "bun --filter '*' dev",
     "docs": "typedoc",
     "docs:deploy": "bun run docs && bunx gh-pages -d docs/backend",
-    "e2e": "playwright test apps/e2e",
+    "e2e": "playwright test --config apps/e2e/playwright.config.ts",
     "lint": "bunx biome check",
     "lint:fix": "bunx biome check --apply",
-    "openapi:lint": "bunx @redocly/cli lint",
-    "tsc": "bun tsc --noEmit",
+    "openapi:lint": "bunx @redocly/cli lint apps/backend/spec/index.yml",
+    "tsc": "bun run tsc:backend && bun run tsc:admin && bun run tsc:storefront",
+    "tsc:backend": "bunx tsc -p apps/backend/tsconfig.json --noEmit",
+    "tsc:admin": "bunx tsc -p apps/admin/tsconfig.app.json --noEmit",
+    "tsc:storefront": "bunx tsc -p apps/storefront/tsconfig.app.json --noEmit",
     "check": "bun run openapi:lint && bun run lint && bun run tsc",
     "prepare": "husky install",
     "storybook": "npx storybook dev -p 6006",
-    "storybook:build": "npx storybook build -c apps/frontend/.storybook -o apps/frontend/storybook-static",
-    "storybook:deploy": "npm run storybook:build && npx gh-pages -d apps/frontend/storybook-static"
+    "storybook:build": "npx storybook build -c apps/admin/.storybook -o apps/admin/storybook-static",
+    "storybook:deploy": "npm run storybook:build && npx gh-pages -d apps/admin/storybook-static"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.9.0",

@@ -1,42 +1,73 @@
-# Render Blueprint — deploys Ordexa as an open-source, single-database stack.
+# Render Blueprint — deploys Ordexa as a MongoDB-backed e-commerce stack.
 #
-#   • ordexa-db        managed PostgreSQL (free)
-#   • ordexa-backend   Node web service (Express API, runs on tsx)
-#   • ordexa-frontend  static site (Vite/React build)
+#   • ordexa-backend    Node web service (Express API, runs on tsx)
+#   • ordexa-frontend   admin static site (Vite/React build)
+#   • ordexa-storefront customer static site (Vite/React build)
+#
+# The Prisma datasource is MongoDB (provider = "mongodb"), so there is no SQL
+# migration history — the build uses `prisma db push` (NOT `migrate deploy`).
+# DATABASE_URL must point at a MongoDB Atlas REPLICA SET (Atlas SRV URI); the
+# inventory reservation flow uses interactive `$transaction`, which a standalone
+# mongod does not support. Atlas free tier (M0) is a replica set and works.
 #
 # Temporal and OpenTelemetry stay OFF here (their env vars are unset), so the
-# backend runs the DB-durable in-process inventory saga — the only path that
-# fits Render's free tier. To enable durable Temporal workflows later, host a
-# Temporal server and set TEMPORAL_ADDRESS (plus run the worker), on a paid
-# instance with enough memory.
-databases:
-  - name: ordexa-db
-    plan: free
-
+# backend runs the DB-durable in-process inventory saga.
 services:
   - type: web
     name: ordexa-backend
     runtime: node
     plan: free
     rootDir: apps/backend
-    buildCommand: npm install && npx prisma generate && npx prisma migrate deploy
+    buildCommand: npm install && npx prisma generate && npx prisma db push
     startCommand: npm start
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: ordexa-db
-          property: connectionString
+        sync: false # Atlas SRV connection string (replica set)
       - key: NODE_ENV
         value: production
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: AUTH_COOKIE_NAME
+        value: ordexa_token
+      - key: CORS_ORIGINS
+        sync: false # comma-separated admin + storefront origins
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: DEFAULT_CURRENCY
+        value: INR
+      - key: SHIPPING_FLAT_RATE
+        value: "49"
+      - key: SHIPPING_FREE_THRESHOLD
+        value: "999"
+      - key: MAIL_FROM
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
 
   - type: web
-    name: ordexa-frontend
+    name: ordexa-admin
     runtime: static
-    rootDir: apps/frontend
+    rootDir: apps/admin
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     envVars:
       # Set to the deployed backend URL after the first deploy, then redeploy.
       - key: VITE_API_URL
+        sync: false
+
+  - type: web
+    name: ordexa-storefront
+    runtime: static
+    rootDir: apps/storefront
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_RAZORPAY_KEY_ID
         sync: false

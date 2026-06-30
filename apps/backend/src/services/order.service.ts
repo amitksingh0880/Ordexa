@@ -5,6 +5,7 @@ import { isTemporalEnabled } from "../temporal/client";
 import { INVENTORY_DEFAULTS, ORDER_EVENT, OrderStatus } from "../constants/orders";
 
 export interface CreateOrderInput {
+  tenantId: string;
   userId: string;
   totalAmount: number;
   status?: string;
@@ -30,6 +31,7 @@ export class OrderService {
       prisma.order.create({
         data: {
           id: orderId,
+          tenantId: input.tenantId,
           userId: input.userId,
           status: OrderStatus.Pending,
           totalAmount: input.totalAmount,
