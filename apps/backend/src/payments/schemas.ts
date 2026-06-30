@@ -17,6 +17,12 @@ export const createPaymentOrderSchema = z.object({
   shippingAddress: addressSnapshot,
   customerName: z.string().min(1),
   customerEmail: z.string().email(),
+  couponCode: z.string().optional(),
+});
+
+export const validateCouponSchema = z.object({
+  code: z.string().min(1),
+  subtotal: z.number().min(0),
 });
 
 export const verifyPaymentSchema = z.object({

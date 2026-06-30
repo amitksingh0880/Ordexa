@@ -19,6 +19,8 @@ export const ARN_MODULES = {
   reviews: "reviews",
   messages: "messages",
   payments: "payments",
+  coupons: "coupons",
+  wishlist: "wishlist",
   tenants: "tenants",
   accessManagement: "accessmanagement",
 } as const;

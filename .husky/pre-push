@@ -1,11 +1,10 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-echo "🔍 Linting..."
-bun run lint
+echo "🔍 Biome (lint + format)..."
+bun run lint || exit 1
 
-# echo "🧠 Type-checking..."
-# bun run tsc
+echo "🧠 Type-checking (backend + admin + storefront)..."
+bun run tsc || exit 1
 
-# echo "🎭 Running E2E Tests..."
-# bun run e2e
+echo "✅ Pre-push checks passed."

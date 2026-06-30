@@ -34,16 +34,28 @@ export function AuthPage({ mode }: { mode: "login" | "register" }) {
       </p>
 
       <div className="mt-8">
-        <AutoForm
-          schema={isLogin ? loginSchema : registerSchema}
-          onSubmit={onSubmit}
-          submitText={isLogin ? AUTH_COPY.signIn : AUTH_COPY.signUp}
-          fieldConfig={{
-            name: { label: AUTH_COPY.name },
-            email: { label: AUTH_COPY.email, placeholder: "you@example.com" },
-            password: { label: AUTH_COPY.password, type: "password", placeholder: "••••••••" },
-          }}
-        />
+        {isLogin ? (
+          <AutoForm
+            schema={loginSchema}
+            onSubmit={onSubmit}
+            submitText={AUTH_COPY.signIn}
+            fieldConfig={{
+              email: { label: AUTH_COPY.email, placeholder: "you@example.com" },
+              password: { label: AUTH_COPY.password, type: "password", placeholder: "••••••••" },
+            }}
+          />
+        ) : (
+          <AutoForm
+            schema={registerSchema}
+            onSubmit={onSubmit}
+            submitText={AUTH_COPY.signUp}
+            fieldConfig={{
+              name: { label: AUTH_COPY.name },
+              email: { label: AUTH_COPY.email, placeholder: "you@example.com" },
+              password: { label: AUTH_COPY.password, type: "password", placeholder: "••••••••" },
+            }}
+          />
+        )}
         {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
       </div>
 

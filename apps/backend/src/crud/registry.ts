@@ -138,6 +138,33 @@ export const RESOURCES: Record<string, CrudResource> = {
     },
     protectedFields: ["status"],
   },
+  coupons: {
+    module: ARN_MODULES.coupons,
+    model: prisma.coupon as unknown as ModelDelegate,
+    searchFields: ["code"],
+    filterFields: ["code", "active", "type"],
+    lookupField: "code",
+    defaultOrderBy: { createdAt: "desc" },
+    policy: {
+      list: arn(ARN_MODULES.coupons),
+      read: arn(ARN_MODULES.coupons),
+      create: arn(ARN_MODULES.coupons, write),
+      modify: arn(ARN_MODULES.coupons, write),
+    },
+  },
+  wishlist: {
+    module: ARN_MODULES.wishlist,
+    model: prisma.wishlist as unknown as ModelDelegate,
+    searchFields: ["productSlug"],
+    filterFields: ["productSlug", "userId"],
+    defaultOrderBy: { createdAt: "desc" },
+    policy: {
+      list: own(ARN_MODULES.wishlist),
+      read: own(ARN_MODULES.wishlist),
+      create: own(ARN_MODULES.wishlist),
+      modify: own(ARN_MODULES.wishlist),
+    },
+  },
 };
 
 export type ResourceName = keyof typeof RESOURCES;

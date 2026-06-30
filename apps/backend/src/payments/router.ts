@@ -3,7 +3,7 @@ import { config } from "../config/env";
 import { requireAuth } from "../auth/middleware";
 import { authorizeArn } from "../auth/authorize";
 import { ARN_MODULES, ARN_ACTIONS } from "../constants/arn";
-import { createPaymentOrderSchema, verifyPaymentSchema } from "./schemas";
+import { createPaymentOrderSchema, verifyPaymentSchema, validateCouponSchema } from "./schemas";
 import {
   createPaymentOrder,
   verifyPayment,
@@ -11,6 +11,7 @@ import {
   OrderNotFoundError,
   SignatureError,
 } from "./service";
+import { computeCouponDiscount } from "./coupon.service";
 
 const asyncHandler =
   (fn: (req: Request, res: Response) => Promise<unknown>) =>
@@ -55,6 +56,19 @@ export function createPaymentsRouter(): Router {
         if (err instanceof EmptyCartError) return res.status(400).json({ error: err.message });
         throw err;
       }
+    }),
+  );
+
+  router.post(
+    "/coupon/validate",
+    requireAuth,
+    checkoutGuard,
+    asyncHandler(async (req, res) => {
+      const parsed = validateCouponSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
+      if (!req.tenantId) return res.status(400).json({ error: "Tenant not resolved" });
+      const result = await computeCouponDiscount(req.tenantId, parsed.data.code, parsed.data.subtotal);
+      res.json({ data: result });
     }),
   );
 

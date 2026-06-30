@@ -525,6 +525,12 @@ async function main() {
     await prisma.message.upsert({ where: { id }, update: data, create: { id, ...data } });
   }
 
+  await prisma.coupon.upsert({
+    where: { code: "WELCOME10" },
+    update: { tenantId, type: "percent", value: 10, active: true },
+    create: { tenantId, code: "WELCOME10", type: "percent", value: 10, minSubtotal: 0, active: true },
+  });
+
   console.log(
     `✅ Seeded ${collections.length} collections, ${products.length} products, ${products.length} inventory items, ${orders.length} orders, ${reviews.length} reviews, ${messages.length} messages`,
   );

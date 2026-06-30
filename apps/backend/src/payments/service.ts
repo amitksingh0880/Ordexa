@@ -4,6 +4,7 @@ import { config } from "../config/env";
 import { razorpay } from "./razorpay";
 import { OrderStatus, PaymentStatus, PAYMENT_METHOD } from "../constants/orders";
 import { fulfillPaidOrder } from "./fulfillment";
+import { computeCouponDiscount } from "./coupon.service";
 import type { CreatePaymentOrderInput, VerifyPaymentInput } from "./schemas";
 
 export class EmptyCartError extends Error {}
@@ -40,7 +41,11 @@ export const createPaymentOrder = async (
 
   const subtotal = lines.reduce((sum, l) => sum + l.price * l.quantity, 0);
   const { method, cost } = resolveShipping(subtotal, input.shippingMethodId);
-  const total = subtotal + cost;
+  const coupon = input.couponCode
+    ? await computeCouponDiscount(tenantId, input.couponCode, subtotal)
+    : null;
+  const discount = coupon?.valid ? coupon.discount : 0;
+  const total = Math.max(0, subtotal + cost - discount);
   const currency = config.shipping.currency;
 
   const order = await prisma.order.create({
@@ -52,6 +57,8 @@ export const createPaymentOrder = async (
       paymentMethod: PAYMENT_METHOD.razorpay,
       totalAmount: total,
       currency,
+      couponCode: coupon?.valid ? coupon.code : null,
+      discount,
       customerName: input.customerName,
       customerEmail: input.customerEmail,
       shippingMethod: method.id,

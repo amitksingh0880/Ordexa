@@ -77,9 +77,17 @@ export interface Order {
   shippingAddress?: Omit<Address, "id" | "isDefault"> | null;
   shippingMethod?: string | null;
   shippingCost?: number | null;
+  couponCode?: string | null;
+  discount?: number | null;
   paymentStatus?: string | null;
   paymentId?: string | null;
   paymentMethod?: string | null;
+  createdAt: string;
+}
+
+export interface WishlistItem {
+  id: string;
+  productSlug: string;
   createdAt: string;
 }
 

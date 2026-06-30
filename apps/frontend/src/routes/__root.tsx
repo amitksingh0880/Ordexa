@@ -249,7 +249,7 @@ function AdminShell() {
             <Separator orientation="vertical" className="mx-1 h-5" />
             <span className="hidden items-center gap-1.5 text-sm text-muted-foreground sm:flex">
               <ShieldCheck className="size-4" />
-              {user.name}
+              {user?.name}
             </span>
             <Button variant="ghost" size="icon" onClick={onLogout} aria-label="Sign out">
               <LogOut className="size-4" />

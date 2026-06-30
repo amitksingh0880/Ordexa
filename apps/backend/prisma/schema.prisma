@@ -26,6 +26,8 @@ model Order {
   razorpayOrderId String?
   paymentStatus   String        @default("Unpaid") // Unpaid | Paid | Refunded
   paymentMethod   String?
+  couponCode      String?
+  discount        Float         @default(0)
   sku             String        @default("DEMO-SKU")
   quantity        Int           @default(1)
   createdAt       DateTime      @default(now())
@@ -316,5 +318,33 @@ model Message {
 
   @@index([tenantId])
   @@index([status])
+}
+
+// A discount code applied at checkout. `type` is "percent" | "fixed".
+model Coupon {
+  id          String    @id @default(uuid()) @map("_id")
+  tenantId    String
+  code        String    @unique
+  type        String    @default("percent")
+  value       Float
+  minSubtotal Float     @default(0)
+  active      Boolean   @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([tenantId])
+}
+
+// A saved product a customer wants to buy later. One row per (user, product).
+model Wishlist {
+  id          String   @id @default(uuid()) @map("_id")
+  tenantId    String
+  userId      String
+  productSlug String
+  createdAt   DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([userId])
 }
 
