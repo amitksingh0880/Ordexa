@@ -196,6 +196,7 @@ export function createCrudRouter(): Router {
         where: { id: req.params.id },
         data: req.body,
       });
+      await req.resource!.hooks?.afterUpdate?.(data);
       res.json({ data });
     }),
   );

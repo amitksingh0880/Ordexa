@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma";
 import { ARN_MODULES, ARN_ACTIONS } from "../constants/arn";
+import { notifyOrderStatus } from "../notify/orderNotifications";
 
 export interface ModelDelegate {
   findMany(args?: unknown): Promise<unknown[]>;
@@ -33,6 +34,7 @@ export interface CrudResource {
   defaultOrderBy?: Record<string, "asc" | "desc">;
   policy: CrudPolicy;
   protectedFields?: string[]; // stripped unless the caller holds module:write
+  hooks?: { afterUpdate?: (updated: unknown) => Promise<void> | void };
 }
 
 const pub: CrudAccess = { kind: "public" };
@@ -90,7 +92,8 @@ export const RESOURCES: Record<string, CrudResource> = {
       create: arn(ARN_MODULES.orders, write),
       modify: arn(ARN_MODULES.orders, write),
     },
-    protectedFields: ["paymentStatus", "paymentId", "razorpayOrderId", "status"],
+    protectedFields: ["paymentStatus", "paymentId", "razorpayOrderId"],
+    hooks: { afterUpdate: notifyOrderStatus },
   },
   inventory: {
     module: ARN_MODULES.inventory,

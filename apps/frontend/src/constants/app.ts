@@ -46,6 +46,20 @@ export const PRODUCT_IMPORT_ENDPOINTS = {
   import: "/products/import",
 } as const;
 
+export const ACCESS_COPY = {
+  title: "Access management",
+  sync: "Sync permissions",
+  roles: "Roles",
+  permissions: "Permissions",
+  users: "Users",
+  newRole: "New role",
+  editPermissions: "Permissions",
+  assignRoles: "Roles",
+  save: "Save",
+  delete: "Delete",
+  superAdmin: "Super admin",
+} as const;
+
 export const PRODUCT_COPY = {
   newProduct: "New product",
   editProduct: "Edit product",
