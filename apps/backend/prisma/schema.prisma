@@ -81,3 +81,45 @@ model SagaExecution {
   finishedAt   DateTime
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Storefront catalog. These models back the customer-facing shop screens and are
+// exposed automatically through the generic CRUD router (src/crud). Registering a
+// model in src/crud/registry.ts is all that is needed to expose full CRUD for it.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// A merchandising grouping (e.g. "Essence"). Products reference it by slug.
+model Collection {
+  id          String   @id @default(uuid()) @map("_id")
+  slug        String   @unique
+  name        String
+  tagline     String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// A purchasable object in the storefront.
+model Product {
+  id             String   @id @default(uuid()) @map("_id")
+  slug           String   @unique
+  name           String
+  series         String                       // editorial sub-label, e.g. "Carbon Black Series"
+  collectionSlug String                       // soft reference to Collection.slug
+  description    String
+  price          Float
+  currency       String   @default("USD")
+  rating         Float    @default(0)
+  reviews        Int      @default(0)
+  badge          String?                      // optional pill, e.g. "New" / "Limited Edition"
+  finishes       String[]                     // selectable finish colours (hex)
+  colors         String[]                     // colour filter tags (hex)
+  images         String[]                     // gallery image URLs (first = primary)
+  featured       Boolean  @default(false)     // surfaced on the home page
+  specs          Json?                        // [{ label, value }] technical specification rows
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([collectionSlug])
+  @@index([featured])
+}
+
