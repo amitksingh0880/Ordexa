@@ -68,12 +68,20 @@ const NAV_ITEMS = [
   { to: ROUTES.reviews, label: "Reviews", icon: Star, badge: RESOURCES.reviews, requires: null },
   { to: ROUTES.messages, label: "Messages", icon: Mail, badge: RESOURCES.messages, requires: null },
   {
+    to: ROUTES.customers,
+    label: "Customers",
+    icon: Users,
+    badge: null,
+    requires: { module: ARN_MODULES.accessManagement, action: ARN_ACTIONS.users },
+  },
+  {
     to: ROUTES.access,
     label: "Access",
     icon: KeyRound,
     badge: null,
     requires: { module: ARN_MODULES.accessManagement, action: ARN_ACTIONS.roles },
   },
+  { to: ROUTES.settings, label: "Settings", icon: Settings, badge: null, requires: null },
 ] as const;
 
 const PAGE_TITLES: Record<string, string> = {
@@ -83,7 +91,9 @@ const PAGE_TITLES: Record<string, string> = {
   [ROUTES.products]: "Products",
   [ROUTES.reviews]: "Reviews",
   [ROUTES.messages]: "Messages",
+  [ROUTES.customers]: "Customers",
   [ROUTES.access]: "Access Management",
+  [ROUTES.settings]: "Settings",
 };
 
 function useTheme() {

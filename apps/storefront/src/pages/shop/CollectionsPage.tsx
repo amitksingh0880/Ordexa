@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowRight, Search } from "lucide-react";
 import { Checkbox } from "@ui/components/ui/checkbox";
+import { Input } from "@ui/components/ui/input";
 import { Separator } from "@ui/components/ui/separator";
 import {
   Select,
@@ -14,12 +15,26 @@ import { ProductGrid } from "../../components/shop/ProductGrid";
 import { NewsletterForm } from "../../components/shop/NewsletterForm";
 import { cn } from "@ui/lib/utils";
 import { SHOP } from "../../constants/shop";
+import { SEARCH_COPY } from "../../constants/app";
 import { products as productsResource, collections as collectionsResource } from "../../lib/resources";
 
 const unique = <T,>(values: T[]): T[] => Array.from(new Set(values));
 
+function useDebounced<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(id);
+  }, [value, delay]);
+  return debounced;
+}
+
 export default function CollectionsPage() {
-  const { data: products, isLoading } = productsResource.useList();
+  const [query, setQuery] = useState("");
+  const search = useDebounced(query, 300);
+  const { data: products, isLoading } = productsResource.useList(
+    search ? { search } : undefined,
+  );
   const { data: collections } = collectionsResource.useList();
   const header = collections?.[0];
 
@@ -76,18 +91,29 @@ export default function CollectionsPage() {
               {header?.description ?? ""}
             </p>
           </div>
-          <Select value={sort} onValueChange={setSort}>
-            <SelectTrigger className="rounded-none border-0 border-b border-ink bg-transparent font-body text-label uppercase tracking-[0.1em]">
-              <SelectValue placeholder={SHOP.collectionsPage.sortLabel} />
-            </SelectTrigger>
-            <SelectContent>
-              {SHOP.collectionsPage.sortOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-end gap-4">
+            <div className="relative">
+              <Search className="absolute left-0 top-1/2 size-4 -translate-y-1/2 text-ink-muted" />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={SEARCH_COPY.placeholder}
+                className="w-48 rounded-none border-0 border-b border-ink bg-transparent pl-6 font-body focus-visible:ring-0"
+              />
+            </div>
+            <Select value={sort} onValueChange={setSort}>
+              <SelectTrigger className="rounded-none border-0 border-b border-ink bg-transparent font-body text-label uppercase tracking-[0.1em]">
+                <SelectValue placeholder={SHOP.collectionsPage.sortLabel} />
+              </SelectTrigger>
+              <SelectContent>
+                {SHOP.collectionsPage.sortOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </section>
 

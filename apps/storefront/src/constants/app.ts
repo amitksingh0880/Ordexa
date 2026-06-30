@@ -69,6 +69,10 @@ export const AUTH_COPY = {
   remove: "Remove",
 } as const;
 
+export const SEARCH_COPY = {
+  placeholder: "Search products",
+} as const;
+
 export const CHECKOUT_COPY = {
   signInRequired: "Sign in to check out",
   signInPrompt: "You need an account to place an order and track delivery.",
