@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@ui/components/ui/select";
 import { Button } from "@ui/components/ui/button";
+import { Input } from "@ui/components/ui/input";
 import { AutoForm } from "@ui/components/ui/auto-form";
 import { SHOP, formatPrice } from "../../constants/shop";
 import { ROUTES, CHECKOUT_COPY, ADDRESS_FIELDS } from "../../constants/app";
@@ -45,6 +46,9 @@ export function CheckoutDialog({
   const methods = config.data?.shipping.methods ?? [];
   const [methodId, setMethodId] = useState<string>("");
   const [processing, setProcessing] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [couponMessage, setCouponMessage] = useState("");
 
   const activeMethod = methods.find((m) => m.id === methodId) ?? methods[0];
   const freeThreshold = config.data?.shipping.freeThreshold ?? Infinity;
@@ -53,7 +57,15 @@ export function CheckoutDialog({
       ? 0
       : activeMethod.cost
     : 0;
-  const total = subtotal + shippingCost;
+  const total = Math.max(0, subtotal + shippingCost - discount);
+
+  const applyCoupon = async () => {
+    const code = couponCode.trim();
+    if (!code) return;
+    const result = await paymentsApi.validateCoupon(code, subtotal);
+    setDiscount(result.valid ? result.discount : 0);
+    setCouponMessage(result.valid ? CHECKOUT_COPY.couponApplied : result.message ?? "");
+  };
 
   const defaultAddress = savedAddresses.data?.find((a) => a.isDefault) ?? savedAddresses.data?.[0];
   const addressDefaults: Partial<AddressValues> | undefined = defaultAddress
@@ -102,6 +114,7 @@ export function CheckoutDialog({
         },
         customerName: user.name,
         customerEmail: user.email,
+        couponCode: discount > 0 ? couponCode.trim() : undefined,
       });
 
       if (created.mock || !created.keyId) {

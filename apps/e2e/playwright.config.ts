@@ -34,7 +34,7 @@ export default defineConfig({
   webServer: [
     {
       command: `bunx vite --port ${ADMIN_PORT} --strictPort`,
-      cwd: "../frontend",
+      cwd: "../admin",
       url: ADMIN_URL,
       timeout: 120_000,
       reuseExistingServer: true,

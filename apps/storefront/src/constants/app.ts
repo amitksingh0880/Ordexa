@@ -25,6 +25,7 @@ export const PAYMENT_ENDPOINTS = {
   config: "/config",
   createOrder: "/razorpay/order",
   verify: "/razorpay/verify",
+  validateCoupon: "/coupon/validate",
 } as const;
 
 export const AUTH_ENDPOINTS = {

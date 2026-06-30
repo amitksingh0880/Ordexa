@@ -28,6 +28,14 @@ export interface CreateOrderPayload {
   };
   customerName: string;
   customerEmail: string;
+  couponCode?: string;
+}
+
+export interface CouponResult {
+  valid: boolean;
+  discount: number;
+  code?: string;
+  message?: string;
 }
 
 export interface CreatedOrder {
@@ -60,5 +68,12 @@ export const paymentsApi = {
   },
   async verify(payload: VerifyPayload): Promise<void> {
     await paymentsHttp.post(PAYMENT_ENDPOINTS.verify, payload);
+  },
+  async validateCoupon(code: string, subtotal: number): Promise<CouponResult> {
+    const { data } = await paymentsHttp.post<{ data: CouponResult }>(
+      PAYMENT_ENDPOINTS.validateCoupon,
+      { code, subtotal },
+    );
+    return data.data;
   },
 };

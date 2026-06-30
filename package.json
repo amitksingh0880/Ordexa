@@ -17,13 +17,13 @@
     "openapi:lint": "bunx @redocly/cli lint",
     "tsc": "bun run tsc:backend && bun run tsc:admin && bun run tsc:storefront",
     "tsc:backend": "bunx tsc -p apps/backend/tsconfig.json --noEmit",
-    "tsc:admin": "bunx tsc -p apps/frontend/tsconfig.app.json --noEmit",
+    "tsc:admin": "bunx tsc -p apps/admin/tsconfig.app.json --noEmit",
     "tsc:storefront": "bunx tsc -p apps/storefront/tsconfig.app.json --noEmit",
     "check": "bun run openapi:lint && bun run lint && bun run tsc",
     "prepare": "husky install",
     "storybook": "npx storybook dev -p 6006",
-    "storybook:build": "npx storybook build -c apps/frontend/.storybook -o apps/frontend/storybook-static",
-    "storybook:deploy": "npm run storybook:build && npx gh-pages -d apps/frontend/storybook-static"
+    "storybook:build": "npx storybook build -c apps/admin/.storybook -o apps/admin/storybook-static",
+    "storybook:deploy": "npm run storybook:build && npx gh-pages -d apps/admin/storybook-static"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.9.0",

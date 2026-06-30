@@ -50,9 +50,9 @@ services:
         sync: false
 
   - type: web
-    name: ordexa-frontend
+    name: ordexa-admin
     runtime: static
-    rootDir: apps/frontend
+    rootDir: apps/admin
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     envVars:

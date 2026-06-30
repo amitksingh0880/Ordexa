@@ -84,5 +84,5 @@
 When implementing anything new, **pull values/constants/components from these single
 sources of truth and import them**. Do not introduce a new inline literal — if a value is
 missing, add it to the matching file below, then reference it:
-- `apps/frontend/src/constants/` — Frontend UI strings, constants, and settings
+- `apps/admin/src/constants/` — Frontend UI strings, constants, and settings
 - `apps/backend/src/config/env.ts` — Backend configuration and environment parameters
