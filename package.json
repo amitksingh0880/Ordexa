@@ -11,7 +11,7 @@
     "dev": "bun --filter '*' dev",
     "docs": "typedoc",
     "docs:deploy": "bun run docs && bunx gh-pages -d docs/backend",
-    "e2e": "playwright test apps/e2e",
+    "e2e": "playwright test --config apps/e2e/playwright.config.ts",
     "lint": "bunx biome check",
     "lint:fix": "bunx biome check --apply",
     "openapi:lint": "bunx @redocly/cli lint",
