@@ -51,6 +51,20 @@ export interface OrderLine {
   quantity: number;
 }
 
+export interface Address {
+  id: string;
+  label?: string | null;
+  fullName: string;
+  phone: string;
+  line1: string;
+  line2?: string | null;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  isDefault: boolean;
+}
+
 export interface Order {
   id: string;
   userId: string;
@@ -60,10 +74,22 @@ export interface Order {
   customerName?: string | null;
   customerEmail?: string | null;
   items?: OrderLine[] | null;
+  shippingAddress?: Omit<Address, "id" | "isDefault"> | null;
+  shippingMethod?: string | null;
+  shippingCost?: number | null;
   paymentStatus?: string | null;
   paymentId?: string | null;
   paymentMethod?: string | null;
   createdAt: string;
+}
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  permissions: string[];
+  createdAt?: string;
 }
 
 export interface Review {

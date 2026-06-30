@@ -4,6 +4,7 @@ import {
   useQueryClient,
   type UseQueryOptions,
 } from "@tanstack/react-query";
+import type { AxiosInstance } from "axios";
 import { createCrudClient, type CrudClient, type ListParams } from "./crud";
 
 type QueryOpts<TData> = Omit<
@@ -27,8 +28,9 @@ export interface ResourceHooks<T> {
 
 export function createResource<T extends { id: string }>(
   resource: string,
+  http?: AxiosInstance,
 ): ResourceHooks<T> {
-  const client = createCrudClient<T>(resource);
+  const client = createCrudClient<T>(resource, http);
 
   const keys = {
     all: [resource] as const,

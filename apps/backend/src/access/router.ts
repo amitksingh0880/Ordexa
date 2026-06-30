@@ -6,12 +6,12 @@ import { authorizeArn } from "../auth/authorize";
 import { ARN_MODULES, ARN_ACTIONS } from "../constants/arn";
 import {
   listPermissions,
-  syncPermissionCatalog,
   listRoles,
   assignRolePermissions,
   assignUserRoles,
   listTenantUsers,
 } from "./service";
+import { syncPermissionCatalog } from "./discovery";
 
 const asyncHandler =
   (fn: (req: Request, res: Response) => Promise<unknown>) =>

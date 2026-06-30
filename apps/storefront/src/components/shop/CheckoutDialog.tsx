@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { ShieldCheck, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -8,22 +10,23 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@ui/components/ui/dialog";
-import { Input } from "@ui/components/ui/input";
-import { Button } from "@ui/components/ui/button";
-import { SHOP, formatPrice } from "../../constants/shop";
-import { checkoutSchema } from "../../lib/schemas";
 import {
-  RAZORPAY_IS_MOCK,
-  makePaymentId,
-  openRealRazorpay,
-} from "../../lib/razorpay";
-import { orders } from "../../lib/resources";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@ui/components/ui/select";
+import { Button } from "@ui/components/ui/button";
+import { AutoForm } from "@ui/components/ui/auto-form";
+import { SHOP, formatPrice } from "../../constants/shop";
+import { ROUTES, CHECKOUT_COPY, ADDRESS_FIELDS } from "../../constants/app";
+import { addressSchema, type AddressValues } from "../../lib/schemas";
+import { paymentsApi } from "../../lib/payments";
+import { openRazorpayCheckout, makePaymentId } from "../../lib/razorpay";
+import { addresses } from "../../lib/resources";
 import { useCart } from "../../context/cart-context";
-
-const inputClass =
-  "rounded-none border-0 border-b border-line bg-transparent px-0 focus-visible:border-ink focus-visible:ring-0";
-
-type Step = "details" | "pay";
+import { useAuth } from "../../context/auth-context";
 
 export function CheckoutDialog({
   open,
@@ -32,192 +35,196 @@ export function CheckoutDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { cartId, subtotal, lines, clear, setOpen: setCartOpen } = useCart();
-  const createOrder = orders.useCreate();
+  const { user } = useAuth();
+  const { cartId, subtotal, clear, setOpen: setCartOpen } = useCart();
+  const navigate = useNavigate();
 
-  const [step, setStep] = useState<Step>("details");
-  const [form, setForm] = useState({ name: "", email: "" });
-  const [error, setError] = useState("");
+  const config = useQuery({ queryKey: ["payments-config"], queryFn: paymentsApi.getConfig });
+  const savedAddresses = addresses.useList(undefined, { enabled: Boolean(user) });
+
+  const methods = config.data?.shipping.methods ?? [];
+  const [methodId, setMethodId] = useState<string>("");
   const [processing, setProcessing] = useState(false);
+
+  const activeMethod = methods.find((m) => m.id === methodId) ?? methods[0];
+  const freeThreshold = config.data?.shipping.freeThreshold ?? Infinity;
+  const shippingCost = activeMethod
+    ? subtotal >= freeThreshold
+      ? 0
+      : activeMethod.cost
+    : 0;
+  const total = subtotal + shippingCost;
+
+  const defaultAddress = savedAddresses.data?.find((a) => a.isDefault) ?? savedAddresses.data?.[0];
+  const addressDefaults: Partial<AddressValues> | undefined = defaultAddress
+    ? {
+        label: defaultAddress.label ?? "",
+        fullName: defaultAddress.fullName,
+        phone: defaultAddress.phone,
+        line1: defaultAddress.line1,
+        line2: defaultAddress.line2 ?? "",
+        city: defaultAddress.city,
+        state: defaultAddress.state,
+        postalCode: defaultAddress.postalCode,
+        country: defaultAddress.country,
+      }
+    : undefined;
 
   const close = (next: boolean) => {
     onOpenChange(next);
-    if (!next) {
-      setStep("details");
-      setProcessing(false);
-      setError("");
-    }
+    if (!next) setProcessing(false);
   };
 
-  const completeOrder = (paymentId: string) => {
-    createOrder.mutate(
-      {
-        userId: cartId,
-        status: "Pending",
-        paymentStatus: "Paid",
-        paymentId,
-        paymentMethod: SHOP.payment.method,
-        totalAmount: subtotal,
-        currency: SHOP.currency.code,
-        customerName: form.name,
-        customerEmail: form.email,
-        items: lines.map((l) => ({
-          productSlug: l.productSlug,
-          name: l.name,
-          price: l.price,
-          finish: l.finish,
-          quantity: l.quantity,
-        })),
-      },
-      {
-        onSuccess: () => {
-          toast.success(SHOP.payment.success);
-          clear();
-          setForm({ name: "", email: "" });
-          close(false);
-          setCartOpen(false);
-        },
-        onError: () => {
-          toast.error("Order could not be saved after payment.");
-          setProcessing(false);
-        },
-      },
-    );
+  const finish = () => {
+    toast.success(SHOP.payment.success);
+    clear();
+    close(false);
+    setCartOpen(false);
+    navigate({ to: ROUTES.account });
   };
 
-  const onContinue = async () => {
-    const result = checkoutSchema.safeParse(form);
-    if (!result.success) {
-      setError(result.error.issues[0]?.message ?? "");
-      return;
-    }
-    setError("");
-
-    if (RAZORPAY_IS_MOCK) {
-      setStep("pay");
-      return;
-    }
-
+  const placeOrder = async (address: AddressValues) => {
+    if (!user) return;
     setProcessing(true);
     try {
-      const { paymentId } = await openRealRazorpay({
-        amount: subtotal,
-        currency: SHOP.currency.code,
-        name: form.name,
-        email: form.email,
+      const created = await paymentsApi.createOrder({
+        cartId,
+        shippingMethodId: activeMethod?.id ?? "",
+        shippingAddress: {
+          fullName: address.fullName,
+          phone: address.phone,
+          line1: address.line1,
+          line2: address.line2,
+          city: address.city,
+          state: address.state,
+          postalCode: address.postalCode,
+          country: address.country,
+        },
+        customerName: user.name,
+        customerEmail: user.email,
       });
-      completeOrder(paymentId);
+
+      if (created.mock || !created.keyId) {
+        await paymentsApi.verify({
+          orderId: created.orderId,
+          razorpayOrderId: created.razorpayOrderId,
+          razorpayPaymentId: makePaymentId(),
+        });
+      } else {
+        const result = await openRazorpayCheckout({
+          keyId: created.keyId,
+          razorpayOrderId: created.razorpayOrderId,
+          amount: created.amount,
+          currency: created.currency,
+          name: user.name,
+          email: user.email,
+        });
+        await paymentsApi.verify({
+          orderId: created.orderId,
+          razorpayOrderId: result.orderId,
+          razorpayPaymentId: result.paymentId,
+          signature: result.signature,
+        });
+      }
+      finish();
     } catch {
       toast.error(SHOP.payment.failed);
       setProcessing(false);
     }
   };
 
-  const mockPay = () => {
-    setProcessing(true);
-    window.setTimeout(() => completeOrder(makePaymentId()), 1300);
-  };
-
-  const mockFail = () => {
-    toast.error(SHOP.payment.failed);
-    setStep("details");
-  };
-
   return (
     <Dialog open={open} onOpenChange={close}>
-      <DialogContent className="bg-surface">
-        {step === "details" ? (
+      <DialogContent className="max-h-[90vh] overflow-y-auto bg-surface">
+        {!user ? (
           <>
             <DialogHeader>
               <DialogTitle className="font-display text-h2 tracking-tight text-ink">
-                {SHOP.payment.detailsTitle}
+                {CHECKOUT_COPY.signInRequired}
+              </DialogTitle>
+              <DialogDescription className="font-body text-ink-soft">
+                {CHECKOUT_COPY.signInPrompt}
+              </DialogDescription>
+            </DialogHeader>
+            <Button asChild className="rounded-none bg-ink py-6 text-white hover:bg-ink/80">
+              <Link to={ROUTES.login} onClick={() => close(false)}>
+                {CHECKOUT_COPY.signInRequired}
+              </Link>
+            </Button>
+          </>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle className="font-display text-h2 tracking-tight text-ink">
+                {CHECKOUT_COPY.addressStep}
               </DialogTitle>
               <DialogDescription className="font-body text-ink-soft">
                 {SHOP.payment.detailsSubtitle}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              <Input
-                placeholder={SHOP.cart.nameLabel}
-                value={form.name}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                className={inputClass}
-              />
-              <Input
-                type="email"
-                placeholder={SHOP.cart.emailLabel}
-                value={form.email}
-                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                className={inputClass}
-              />
-              {error ? <p className="font-body text-xs text-destructive">{error}</p> : null}
-              <div className="flex items-center justify-between pt-2">
-                <span className="font-display text-h2 font-bold text-ink">
-                  {formatPrice(subtotal)}
-                </span>
-                <Button
-                  onClick={onContinue}
-                  disabled={processing}
-                  className="rounded-none bg-ink px-8 py-6 font-body text-label uppercase tracking-[0.2em] text-white hover:bg-ink/80"
-                >
-                  {processing ? <Loader2 className="size-4 animate-spin" /> : null}
-                  {SHOP.payment.continue}
-                </Button>
-              </div>
-            </div>
-          </>
-        ) : (
-          <>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 font-display text-h2 tracking-tight text-ink">
-                <span className="rounded bg-[#0b3bdc] px-2 py-0.5 text-xs font-bold text-white">
-                  Razorpay
-                </span>
-                {SHOP.payment.payTitle}
-              </DialogTitle>
-              <DialogDescription className="font-body text-ink-soft">
-                {SHOP.payment.company} · {form.email}
-              </DialogDescription>
-            </DialogHeader>
 
-            <div className="space-y-4 rounded-md border border-line bg-surface-low p-5">
-              <div className="flex items-baseline justify-between">
-                <span className="font-body text-label uppercase tracking-[0.15em] text-ink-muted">
-                  Amount
-                </span>
-                <span className="font-display text-h2 font-bold text-ink">
-                  {formatPrice(subtotal)}
-                </span>
-              </div>
-              <p className="font-body text-xs text-ink-muted">{SHOP.payment.testCard}</p>
-              <Button
-                onClick={mockPay}
-                disabled={processing}
-                className="w-full rounded-none bg-ink py-6 font-body text-label uppercase tracking-[0.2em] text-white hover:bg-ink/80"
-              >
-                {processing ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
-                    {SHOP.payment.processing}
-                  </>
-                ) : (
-                  `${SHOP.payment.payCta} ${formatPrice(subtotal)}`
-                )}
-              </Button>
-              {!processing ? (
-                <button
-                  type="button"
-                  onClick={mockFail}
-                  className="w-full font-body text-[11px] uppercase tracking-[0.1em] text-ink-muted underline-offset-2 hover:underline"
-                >
-                  {SHOP.payment.simulateFail}
-                </button>
-              ) : null}
+            <div className="space-y-2">
+              <span className="font-body text-label uppercase tracking-[0.15em] text-ink-muted">
+                {CHECKOUT_COPY.deliveryMethod}
+              </span>
+              <Select value={activeMethod?.id ?? ""} onValueChange={setMethodId}>
+                <SelectTrigger className="w-full rounded-none border-line">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {methods.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.label} · {m.cost === 0 ? CHECKOUT_COPY.free : formatPrice(m.cost)} · {m.etaDays}d
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
+            <div className="space-y-1 border-y border-line py-3 font-body text-sm">
+              <div className="flex justify-between text-ink-soft">
+                <span>{CHECKOUT_COPY.subtotal}</span>
+                <span>{formatPrice(subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-ink-soft">
+                <span>{CHECKOUT_COPY.shipping}</span>
+                <span>{shippingCost === 0 ? CHECKOUT_COPY.free : formatPrice(shippingCost)}</span>
+              </div>
+              <div className="flex justify-between font-display text-base font-bold text-ink">
+                <span>{CHECKOUT_COPY.total}</span>
+                <span>{formatPrice(total)}</span>
+              </div>
+            </div>
+
+            {processing ? (
+              <div className="flex items-center justify-center gap-2 py-6 text-ink-soft">
+                <Loader2 className="size-4 animate-spin" />
+                {SHOP.payment.processing}
+              </div>
+            ) : (
+              <AutoForm
+                key={defaultAddress?.id ?? "new-address"}
+                schema={addressSchema}
+                onSubmit={placeOrder}
+                defaultValues={addressDefaults}
+                submitText={`${SHOP.payment.payCta} ${formatPrice(total)}`}
+                fieldConfig={{
+                  label: { label: ADDRESS_FIELDS.label },
+                  fullName: { label: ADDRESS_FIELDS.fullName },
+                  phone: { label: ADDRESS_FIELDS.phone },
+                  line1: { label: ADDRESS_FIELDS.line1 },
+                  line2: { label: ADDRESS_FIELDS.line2 },
+                  city: { label: ADDRESS_FIELDS.city },
+                  state: { label: ADDRESS_FIELDS.state },
+                  postalCode: { label: ADDRESS_FIELDS.postalCode },
+                  country: { label: ADDRESS_FIELDS.country },
+                }}
+              />
+            )}
 
             <div className="flex items-center justify-center gap-1.5 font-body text-[11px] text-ink-muted">
               <ShieldCheck className="size-3.5" />
-              {SHOP.payment.securedNote} · {SHOP.payment.demoNote}
+              {SHOP.payment.securedNote}
             </div>
           </>
         )}

@@ -41,6 +41,27 @@ export const ACCESS_ENDPOINTS = {
   users: "/access/users",
 } as const;
 
+export const PRODUCT_IMPORT_ENDPOINTS = {
+  template: "/products/template",
+  import: "/products/import",
+} as const;
+
+export const PRODUCT_COPY = {
+  newProduct: "New product",
+  editProduct: "Edit product",
+  downloadTemplate: "Download template",
+  importProducts: "Import",
+  importTitle: "Bulk import products",
+  importHint: "Upload an .xlsx file. Download the template for the expected columns.",
+  uploadCta: "Upload & import",
+  deleteTitle: "Delete product",
+  deleteConfirm: "This permanently removes the product. Continue?",
+  delete: "Delete",
+  cancel: "Cancel",
+  save: "Save product",
+  create: "Create product",
+} as const;
+
 export const RESOURCES = {
   products: "products",
   collections: "collections",

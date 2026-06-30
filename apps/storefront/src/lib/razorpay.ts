@@ -1,11 +1,15 @@
 import { SHOP } from "../constants/shop";
 
-export interface RazorpaySuccess {
+export interface RazorpayResult {
   paymentId: string;
+  orderId: string;
+  signature: string;
 }
 
 interface RazorpayHandlerResponse {
   razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
 }
 
 interface RazorpayInstance {
@@ -23,13 +27,6 @@ declare global {
 }
 
 const RAZORPAY_SRC = "https://checkout.razorpay.com/v1/checkout.js";
-
-export const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID as
-  | string
-  | undefined;
-
-// No key configured → run the self-contained mock gateway.
-export const RAZORPAY_IS_MOCK = !RAZORPAY_KEY_ID;
 
 let scriptPromise: Promise<boolean> | null = null;
 
@@ -52,29 +49,37 @@ export function makePaymentId(): string {
   return `pay_${Math.random().toString(16).slice(2, 16)}`;
 }
 
-interface PaymentRequest {
+interface CheckoutOptions {
+  keyId: string;
+  razorpayOrderId: string;
   amount: number;
   currency: string;
   name: string;
   email: string;
 }
 
-// Opens the real Razorpay hosted checkout when a key is configured.
-export async function openRealRazorpay(req: PaymentRequest): Promise<RazorpaySuccess> {
+// Opens the hosted checkout for a server-created order and resolves with the
+// signed handler response, which the backend then verifies.
+export async function openRazorpayCheckout(opts: CheckoutOptions): Promise<RazorpayResult> {
   const ready = await loadRazorpayScript();
   if (!ready || !window.Razorpay) throw new Error("Razorpay is unavailable");
 
-  return new Promise<RazorpaySuccess>((resolve, reject) => {
+  return new Promise<RazorpayResult>((resolve, reject) => {
     const instance = new window.Razorpay!({
-      key: RAZORPAY_KEY_ID,
-      amount: Math.round(req.amount * 100),
-      currency: req.currency,
+      key: opts.keyId,
+      order_id: opts.razorpayOrderId,
+      amount: Math.round(opts.amount * 100),
+      currency: opts.currency,
       name: SHOP.payment.company,
       description: SHOP.payment.description,
-      prefill: { name: req.name, email: req.email },
+      prefill: { name: opts.name, email: opts.email },
       theme: { color: "#0a0a0a" },
       handler: (response: RazorpayHandlerResponse) =>
-        resolve({ paymentId: response.razorpay_payment_id }),
+        resolve({
+          paymentId: response.razorpay_payment_id,
+          orderId: response.razorpay_order_id,
+          signature: response.razorpay_signature,
+        }),
       modal: { ondismiss: () => reject(new Error("Payment cancelled")) },
     });
     instance.open();

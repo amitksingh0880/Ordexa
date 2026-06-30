@@ -1,8 +1,5 @@
-import axios from "axios";
-import { API_BASE_URL } from "./api";
-import { API } from "../constants/app";
-
-const http = axios.create({ baseURL: `${API_BASE_URL}${API.crudBasePath}` });
+import type { AxiosInstance } from "axios";
+import { apiHttp } from "./http";
 
 export type ListParams = Record<string, string | number | boolean | undefined>;
 
@@ -14,7 +11,10 @@ export interface CrudClient<T> {
   remove(id: string): Promise<void>;
 }
 
-export function createCrudClient<T>(resource: string): CrudClient<T> {
+export function createCrudClient<T>(
+  resource: string,
+  http: AxiosInstance = apiHttp,
+): CrudClient<T> {
   const base = `/${resource}`;
   return {
     async list(params) {

@@ -31,6 +31,17 @@ export const ReservationStatus = {
 } as const;
 export type ReservationStatus = (typeof ReservationStatus)[keyof typeof ReservationStatus];
 
+export const PaymentStatus = {
+  Unpaid: "Unpaid",
+  Paid: "Paid",
+  Refunded: "Refunded",
+} as const;
+export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
+
+export const PAYMENT_METHOD = {
+  razorpay: "Razorpay",
+} as const;
+
 // Defaults applied when an order omits inventory details.
 export const INVENTORY_DEFAULTS = {
   sku: "DEMO-SKU",
@@ -41,6 +52,7 @@ export const INVENTORY_DEFAULTS = {
 export const ORDER_EVENT = {
   aggregateType: "Order",
   createdType: "OrderCreated",
+  paidType: "OrderPaid",
 } as const;
 
 // Temporal workflow identity + saga retry/timeout policy.

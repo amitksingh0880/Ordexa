@@ -2,10 +2,11 @@ import type { Request, Response, NextFunction } from "express";
 import { AUTH_ERRORS } from "../constants/auth";
 import { moduleArn } from "../constants/arn";
 import { hasArn, isReadGranted } from "./arn";
+import { registerGuardArn } from "../access/discovery";
 
-export const authorizeArn =
-  (module: string, action?: string) =>
-  (req: Request, res: Response, next: NextFunction): void => {
+export const authorizeArn = (module: string, action?: string) => {
+  registerGuardArn(module, action);
+  return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({ error: AUTH_ERRORS.unauthorized });
       return;
@@ -18,3 +19,4 @@ export const authorizeArn =
     }
     res.status(403).json({ error: AUTH_ERRORS.forbidden });
   };
+};

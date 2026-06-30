@@ -208,7 +208,7 @@ function AdminShell() {
           <SidebarTrigger />
           <Separator orientation="vertical" className="mr-1 h-5" />
           <h1 className="text-base font-semibold">{title}</h1>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-1">
             <Button
               variant="ghost"
               size="icon"
@@ -216,6 +216,14 @@ function AdminShell() {
               aria-label="Toggle theme"
             >
               {dark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+            </Button>
+            <Separator orientation="vertical" className="mx-1 h-5" />
+            <span className="hidden items-center gap-1.5 text-sm text-muted-foreground sm:flex">
+              <ShieldCheck className="size-4" />
+              {user.name}
+            </span>
+            <Button variant="ghost" size="icon" onClick={onLogout} aria-label="Sign out">
+              <LogOut className="size-4" />
             </Button>
           </div>
         </header>

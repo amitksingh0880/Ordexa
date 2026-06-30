@@ -1,9 +1,5 @@
 import { prisma } from "../lib/prisma";
-import {
-  ARN_CATALOG,
-  scopeTemplateToTenant,
-  tenantSuperArn,
-} from "../constants/arn";
+import { scopeTemplateToTenant, tenantSuperArn } from "../constants/arn";
 
 export interface ResolvedAccess {
   tenantId: string;
@@ -44,21 +40,6 @@ export const resolveUserAccess = async (userId: string): Promise<ResolvedAccess 
   }
 
   return { tenantId: user.tenantId, role: user.role, permissions: [...arns] };
-};
-
-export const syncPermissionCatalog = async (): Promise<number> => {
-  for (const entry of ARN_CATALOG) {
-    await prisma.accessPermission.upsert({
-      where: { resourceArn: entry.template },
-      update: { permissionName: entry.name, description: entry.description, isActive: true },
-      create: {
-        permissionName: entry.name,
-        resourceArn: entry.template,
-        description: entry.description,
-      },
-    });
-  }
-  return ARN_CATALOG.length;
 };
 
 export const listPermissions = () =>

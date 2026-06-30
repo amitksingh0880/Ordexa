@@ -1,12 +1,17 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { STORAGE_KEYS } from "../constants/app";
 import { cart } from "../lib/resources";
+import { authApi } from "../lib/auth";
+import { useAuth } from "./auth-context";
 import type { CartItem, Product } from "../types/shop";
 
 interface CartContextValue {
@@ -35,8 +40,24 @@ function resolveCartId(): string {
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [cartId] = useState(resolveCartId);
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const [guestId] = useState(resolveCartId);
   const [open, setOpen] = useState(false);
+
+  // Logged-in shoppers carry their cart under their user id; guests use the
+  // local cartId. The guest bag is merged once on the first authenticated load.
+  const cartId = user?.id ?? guestId;
+  const mergedRef = useRef(false);
+
+  useEffect(() => {
+    if (user && !mergedRef.current && guestId !== user.id) {
+      mergedRef.current = true;
+      authApi
+        .mergeCart(guestId)
+        .then(() => qc.invalidateQueries({ queryKey: cart.keys.all }));
+    }
+  }, [user, guestId, qc]);
 
   const { data: lines = [], isLoading } = cart.useList({ cartId });
   const createItem = cart.useCreate();

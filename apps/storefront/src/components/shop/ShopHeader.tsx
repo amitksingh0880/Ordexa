@@ -9,9 +9,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@ui/components/ui/sheet";
-import { ROUTES } from "../../constants/app";
+import { ROUTES, AUTH_COPY } from "../../constants/app";
 import { SHOP } from "../../constants/shop";
 import { useCart } from "../../context/cart-context";
+import { useAuth } from "../../context/auth-context";
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   return (
@@ -32,6 +33,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 
 export function ShopHeader() {
   const { count, setOpen } = useCart();
+  const { user } = useAuth();
 
   return (
     <header className="fixed top-0 z-40 w-full border-b border-line/20 bg-surface/80 shadow-sm backdrop-blur-xl">
@@ -65,8 +67,16 @@ export function ShopHeader() {
               </Badge>
             ) : null}
           </Button>
-          <Button variant="ghost" size="icon" className="text-ink" aria-label="Account">
-            <User className="size-5" />
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            className="text-ink"
+            aria-label={AUTH_COPY.account}
+          >
+            <Link to={user ? ROUTES.account : ROUTES.login}>
+              <User className="size-5" />
+            </Link>
           </Button>
 
           <Sheet>

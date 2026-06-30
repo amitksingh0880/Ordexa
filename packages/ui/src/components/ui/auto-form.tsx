@@ -4,18 +4,68 @@ import { Label } from "./label";
 import { Input } from "./input";
 import { Textarea } from "./textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
+import { Badge } from "./badge";
 import { Button } from "./button";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 
 export type FieldConfig = {
   label?: string;
   placeholder?: string;
-  type?: "text" | "number" | "password" | "textarea" | "select" | "hidden";
+  type?: "text" | "number" | "password" | "textarea" | "select" | "tags" | "hidden";
   readOnly?: boolean;
   options?: { label: string; value: string; disabled?: boolean }[];
   className?: string;
   renderRightElement?: (value: any, onChange: (val: any) => void) => React.ReactNode;
 };
+
+function TagsField({
+  value,
+  onChange,
+  placeholder,
+  readOnly,
+}: {
+  value: string[];
+  onChange: (val: string[]) => void;
+  placeholder?: string;
+  readOnly?: boolean;
+}) {
+  const [draft, setDraft] = useState("");
+  const commit = () => {
+    const next = draft.trim();
+    if (next && !value.includes(next)) onChange([...value, next]);
+    setDraft("");
+  };
+  return (
+    <div className="w-full space-y-2">
+      <div className="flex flex-wrap gap-1.5">
+        {value.map((tag) => (
+          <Badge key={tag} variant="secondary" className="gap-1">
+            {tag}
+            {!readOnly && (
+              <button type="button" onClick={() => onChange(value.filter((t) => t !== tag))}>
+                <X className="size-3" />
+              </button>
+            )}
+          </Badge>
+        ))}
+      </div>
+      {!readOnly && (
+        <Input
+          value={draft}
+          placeholder={placeholder}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === ",") {
+              e.preventDefault();
+              commit();
+            }
+          }}
+          onBlur={commit}
+        />
+      )}
+    </div>
+  );
+}
 
 interface AutoFormProps<T extends z.ZodRawShape> {
   schema: z.ZodObject<T>;
@@ -54,6 +104,8 @@ export function AutoForm<T extends z.ZodRawShape>({
           vals[key] = 0;
         } else if (field instanceof z.ZodBoolean) {
           vals[key] = false;
+        } else if (field instanceof z.ZodArray) {
+          vals[key] = [];
         } else {
           vals[key] = "";
         }
@@ -175,6 +227,8 @@ export function AutoForm<T extends z.ZodRawShape>({
             controlType = "select";
           } else if (fieldSchema instanceof z.ZodNumber) {
             controlType = "number";
+          } else if (fieldSchema instanceof z.ZodArray) {
+            controlType = "tags";
           } else {
             controlType = "text";
           }
@@ -218,6 +272,13 @@ export function AutoForm<T extends z.ZodRawShape>({
                     ))}
                   </SelectContent>
                 </Select>
+              ) : controlType === "tags" ? (
+                <TagsField
+                  value={Array.isArray(value) ? value : []}
+                  onChange={(v) => handleChange(name, v)}
+                  placeholder={placeholder}
+                  readOnly={config?.readOnly}
+                />
               ) : (
                 <Input
                   id={key}

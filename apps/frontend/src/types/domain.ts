@@ -96,7 +96,17 @@ export interface Product {
   reviews: number;
   badge?: string | null;
   featured: boolean;
+  finishes?: string[];
+  colors?: string[];
   images: string[];
+}
+
+export interface Collection {
+  id: string;
+  slug: string;
+  name: string;
+  tagline?: string | null;
+  description?: string | null;
 }
 
 export interface Review {

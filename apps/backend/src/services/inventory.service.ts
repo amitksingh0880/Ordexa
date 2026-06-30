@@ -61,6 +61,29 @@ export async function reserveInventory({ orderId, sku, quantity }: ReserveInput)
   });
 }
 
+export interface SaleLine {
+  sku: string;
+  quantity: number;
+}
+
+// Decrements sellable stock for each paid line in one transaction. Untracked
+// SKUs are skipped; stock is clamped at zero. Idempotency is guaranteed by the
+// caller (a paid order is fulfilled exactly once).
+export async function confirmSale(lines: SaleLine[]) {
+  return prisma.$transaction(async (tx) => {
+    for (const line of lines) {
+      const item = await tx.inventory.findUnique({ where: { sku: line.sku } });
+      if (!item) continue;
+      const decrement = Math.min(item.available, line.quantity);
+      if (decrement <= 0) continue;
+      await tx.inventory.update({
+        where: { sku: line.sku },
+        data: { available: { decrement } },
+      });
+    }
+  });
+}
+
 /**
  * Confirm a held reservation: the units leave the warehouse, so drop them from
  * `reserved` without returning them to `available`. Idempotent.
