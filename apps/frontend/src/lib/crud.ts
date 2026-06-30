@@ -1,8 +1,4 @@
-import axios from "axios";
-import { API_BASE_URL } from "./api";
-import { API } from "../constants/app";
-
-const http = axios.create({ baseURL: `${API_BASE_URL}${API.crudBasePath}` });
+import { apiHttp as http } from "./http";
 
 export type ListParams = Record<string, string | number | boolean | undefined>;
 

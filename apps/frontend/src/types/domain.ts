@@ -8,6 +8,17 @@ export interface OrderLine {
   quantity: number;
 }
 
+export interface ShippingAddress {
+  fullName: string;
+  phone: string;
+  line1: string;
+  line2?: string | null;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
+
 export interface Order {
   id: string;
   userId: string;
@@ -18,11 +29,48 @@ export interface Order {
   customerName?: string | null;
   customerEmail?: string | null;
   items?: OrderLine[] | null;
+  shippingAddress?: ShippingAddress | null;
+  shippingMethod?: string | null;
+  shippingCost?: number | null;
   paymentStatus?: string | null;
   paymentId?: string | null;
   paymentMethod?: string | null;
   createdAt: string;
   updatedAt?: string;
+}
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  permissions: string[];
+  createdAt?: string;
+}
+
+export interface AccessPermission {
+  id: string;
+  permissionName: string;
+  resourceArn: string;
+  description?: string | null;
+  isActive: boolean;
+}
+
+export interface AccessRole {
+  id: string;
+  roleName: string;
+  description?: string | null;
+  isActive: boolean;
+  isSuperAdmin: boolean;
+  assignedArns: string[];
+}
+
+export interface AccessUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  roleIds: string[];
 }
 
 export interface InventoryItem {

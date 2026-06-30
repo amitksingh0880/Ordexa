@@ -2,6 +2,7 @@ import {
   Outlet,
   Link,
   useLocation,
+  useNavigate,
   createRootRoute,
 } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -14,6 +15,9 @@ import {
   Mail,
   Moon,
   Sun,
+  LogOut,
+  ShieldCheck,
+  Loader2,
 } from "lucide-react";
 
 import {
@@ -44,6 +48,7 @@ import {
   THEME_STORAGE_KEY,
 } from "../constants/app";
 import { orders, reviews, messages } from "../lib/resources";
+import { useAuth } from "../context/auth-context";
 
 export const Route = createRootRoute({
   component: RootLayout,
@@ -91,8 +96,41 @@ function useTheme() {
 
 export function RootLayout() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const { user, loading } = useAuth();
+
+  const onLoginRoute = pathname === ROUTES.login;
+
+  useEffect(() => {
+    if (!loading && !user && !onLoginRoute) {
+      navigate({ to: ROUTES.login });
+    }
+  }, [loading, user, onLoginRoute, navigate]);
+
+  if (onLoginRoute) return <Outlet />;
+
+  if (loading || !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return <AdminShell />;
+}
+
+function AdminShell() {
+  const { pathname } = useLocation();
   const { dark, toggle } = useTheme();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const onLogout = async () => {
+    await logout();
+    navigate({ to: ROUTES.login });
+  };
 
   const pendingOrders = orders.useList({ status: ORDER_STATUS.Pending });
   const pendingReviews = reviews.useList({ status: REVIEW_STATUS.Pending });

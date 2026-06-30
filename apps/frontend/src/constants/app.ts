@@ -16,11 +16,29 @@ export const ROUTES = {
   products: "/products",
   reviews: "/reviews",
   messages: "/messages",
+  customers: "/customers",
+  access: "/access",
+  login: "/login",
 } as const;
 
 // Generic CRUD API: base path + the resource segments under /api/:resource.
 export const API = {
   crudBasePath: "/api",
+  authBasePath: "/auth",
+} as const;
+
+export const AUTH_ENDPOINTS = {
+  login: "/login",
+  register: "/register",
+  logout: "/logout",
+  me: "/me",
+} as const;
+
+export const ACCESS_ENDPOINTS = {
+  permissions: "/access/permissions",
+  sync: "/access/sync",
+  roles: "/access/roles",
+  users: "/access/users",
 } as const;
 
 export const RESOURCES = {
@@ -30,6 +48,31 @@ export const RESOURCES = {
   inventory: "inventory",
   reviews: "reviews",
   messages: "messages",
+} as const;
+
+export const AUTH_STORAGE_KEY = "ordexa-admin-token";
+
+export const ARN = {
+  partition: "arn:ordexa",
+  wildcard: "*",
+  moduleSegment: "module",
+} as const;
+
+export const ARN_MODULES = {
+  products: "products",
+  collections: "collections",
+  orders: "orders",
+  inventory: "inventory",
+  reviews: "reviews",
+  messages: "messages",
+  accessManagement: "accessmanagement",
+} as const;
+
+export const ARN_ACTIONS = {
+  write: "write",
+  roles: "roles",
+  arns: "arns",
+  users: "users",
 } as const;
 
 export type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
