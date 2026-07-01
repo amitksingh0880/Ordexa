@@ -158,7 +158,6 @@ function AdminShell() {
   const { dark, toggle } = useTheme();
   const { user, logout, can } = useAuth();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navItems = NAV_ITEMS.filter(
     (item) => !item.requires || can(item.requires.module, item.requires.action),
@@ -182,17 +181,8 @@ function AdminShell() {
   const title = PAGE_TITLES[pathname] ?? APP.name;
 
   return (
-    <SidebarProvider
-      open={sidebarOpen}
-      onOpenChange={setSidebarOpen}
-      className="hover-sidebar"
-    >
-      <Sidebar
-        variant="inset"
-        collapsible="icon"
-        onMouseEnter={() => setSidebarOpen(true)}
-        onMouseLeave={() => setSidebarOpen(false)}
-      >
+    <SidebarProvider defaultOpen>
+      <Sidebar collapsible="icon">
         <SidebarHeader>
           <div className="flex items-center gap-2 px-2 py-1">
             <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold">

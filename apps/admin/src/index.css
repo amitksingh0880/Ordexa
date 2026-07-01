@@ -125,21 +125,3 @@
     font-family: var(--font-sans);
   }
 }
-
-/* Hover-expand sidebar: reserve only the collapsed (icon) width in layout so the
-   expanded panel slides in as a floating overlay on hover instead of pushing the
-   page. The width/left transitions are already animated by the sidebar component. */
-@media (min-width: 768px) {
-  .hover-sidebar [data-slot="sidebar-gap"] {
-    width: calc(var(--sidebar-width-icon) + 1rem) !important;
-  }
-  .hover-sidebar [data-slot="sidebar-container"] {
-    z-index: 40;
-  }
-  .hover-sidebar [data-slot="sidebar-inset"] {
-    margin-left: 0.5rem !important;
-  }
-  .hover-sidebar [data-state="expanded"] [data-slot="sidebar-inner"] {
-    box-shadow: 0 20px 45px -15px rgb(0 0 0 / 0.3);
-  }
-}
