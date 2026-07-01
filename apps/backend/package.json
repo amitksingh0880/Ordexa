@@ -6,11 +6,11 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
-    "build": "prisma generate",
+    "build": "bunx prisma generate",
     "worker": "tsx src/temporal/worker.ts",
     "generate:types": "openapi-typescript ./spec/index.yml --output ./src/types/api.d.ts",
     "test": "bun test",
-    "db:reset": "prisma db push --force-reset && prisma generate",
+    "db:reset": "bunx prisma db push --force-reset && bunx prisma generate",
     "db:seed": "tsx prisma/seed.ts",
     "check:db": "tsx scripts/dev/checks/checkDb.ts"
   },
