@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
-    "build": "bunx prisma@6.11.1 generate",
+    "build": "bun install --frozen-lockfile && prisma generate && prisma db push",
     "worker": "tsx src/temporal/worker.ts",
     "generate:types": "openapi-typescript ./spec/index.yml --output ./src/types/api.d.ts",
     "test": "bun test",
